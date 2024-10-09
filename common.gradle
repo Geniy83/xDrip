@@ -72,6 +72,6 @@ ext.generateVersionName = { ->
     }
     stringBuilder.append('-')
     stringBuilder.append((new Date()).format('yyyy.MM.dd'))
-    stringBuilder.append('-Egor')
+    stringBuilder.append('-Evgeniy')
     return stringBuilder.toString()
 }

@@ -140,13 +140,19 @@ public class LibreReceiver extends BroadcastReceiver {
                                 if (!BgReading.last_within_millis(DexCollectionType.getCurrentDeduplicationPeriod())) {
                                     long smoothing_minutes = Pref.getStringToInt("libre_filter_length", 25);
                                     long dataFetchInterval;
-                                    if ( smoothing_minutes == 25L )
-                                        dataFetchInterval = 20L;
-                                    else
-                                        dataFetchInterval = smoothing_minutes;
-                                    List<Libre2RawValue> smoothingValues = Libre2RawValue.weightedAverageInterval(dataFetchInterval);
-                                    smoothingValues.add(currentRawValue);
-                                    processValues(currentRawValue, smoothingValues, smoothing_minutes, context);
+                                    if ( smoothing_minutes == 0L ) {
+                                        Log.v(TAG, "no smoothing minutes = " + smoothing_minutes);
+                                        processValuesNoSmoothing(currentRawValue, context);
+                                    } else {
+                                        if ( smoothing_minutes == 25L )
+                                            dataFetchInterval = 20L;
+                                        else
+                                            dataFetchInterval = smoothing_minutes;
+
+                                        List<Libre2RawValue> smoothingValues = Libre2RawValue.weightedAverageInterval(dataFetchInterval);
+                                        smoothingValues.add(currentRawValue);
+                                        processValues(currentRawValue, smoothingValues, smoothing_minutes, context);
+                                    }
                                 }
                                 currentRawValue.save();
                                 clearNFCsensorAge();
@@ -203,12 +209,18 @@ public class LibreReceiver extends BroadcastReceiver {
     private static void processValues(Libre2RawValue currentValue, List<Libre2RawValue> smoothingValues, long smoothing_minutes, Context context) {
         if (Sensor.currentSensor() == null) {
             Sensor.create(currentValue.timestamp, currentValue.serial);
-
         }
-
         double value = calculateWeightedAverage(smoothingValues, currentValue.timestamp, TimeUnit.MINUTES.toMillis(smoothing_minutes));
         BgReading.bgReadingInsertLibre2(value, currentValue.timestamp, currentValue.glucose);
     }
+
+    private static void processValuesNoSmoothing(Libre2RawValue currentValue, Context context) {
+        if (Sensor.currentSensor() == null) {
+            Sensor.create(currentValue.timestamp, currentValue.serial);
+        }
+        BgReading.bgReadingInsertLibre2(currentValue.glucose, currentValue.timestamp, currentValue.glucose);
+    }
+
 
     private static void saveSensorStartTime(Bundle sensor, String serial) {
         if (sensor != null && sensor.containsKey("sensorStartTime")) {

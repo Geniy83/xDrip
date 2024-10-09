@@ -1694,11 +1694,12 @@
     <string name="enable_streaming_always_allow">Всегда подключаться к сенсорам Libre2</string>
     <string name="enable_streaming_ask_each_time">Спрашивать каждый раз</string>
     <string name="enable_streaming_never">Никогда не подключаться к сенсорам Libre2</string>
+    <string name="libre_filter_length_0">не фильтровать</string>
     <string name="libre_filter_length_10">10 минут</string>
     <string name="libre_filter_length_15">15 минут</string>
     <string name="libre_filter_length_25">25 минут ></string>
-    <string name="libre_filter_length_summary">Количество минут для учета при использовании данных librex</string>
-    <string name="libre_filter_length_title">Сглаживать данные libre 3 при использовании метода xxx</string>
+    <string name="libre_filter_length_summary">Количество минут для учета при сглаживании данных</string>
+    <string name="libre_filter_length_title">Сглаживать данные libre (patched app)</string>
     <string name="enable_streaming_dialog_yes">Подключиться к этому сенсору Libre2</string>
     <string name="enable_streaming_dialog_no">Не подключаться к этому сенсору Libre2</string>
     <string name="enable_streaming_dialog_dont_ask_again">Больше не спрашивать</string>
