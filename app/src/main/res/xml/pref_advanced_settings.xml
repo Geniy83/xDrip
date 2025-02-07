@@ -1587,6 +1587,14 @@
 
                 <CheckBoxPreference
                     android:defaultValue="false"
+                    android:dependency="engineering_mode"
+                    android:enabled="true"
+                    android:key="follower_one_minute"
+                    android:summary="Принимайте данные с интервалом в одну минуту для источника xDrip+ Sync Follower. Данная функция находится в тестовом режиме! При каких-либо неисправностях, просьба сообщить. Что бы активировать изменения этого параметра, вам необходимо перезагрузить телефон!"
+                    android:title="Follower one minute" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
                     android:dependency="allow_testing_with_dead_sensor"
                     android:key="allow_testing_with_dead_sensor"
                     android:summary="@string/summary_allow_testing_with_dead_sensor"

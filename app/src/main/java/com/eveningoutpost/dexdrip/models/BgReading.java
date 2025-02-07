@@ -966,8 +966,15 @@ public class BgReading extends Model implements ShareUploadableBg {
     }
 
     public static BgReading readingNearTimeStamp(long startTime) {
-        long margin = (4 * 60 * 1000);
-        return readingNearTimeStamp(startTime, margin);
+        if(DexCollectionType.getCurrentSamplePeriod() == 59_000) {
+            long margin = (59 * 1000);
+            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
+            return readingNearTimeStamp(startTime, margin);
+        } else {
+            long margin = (4 * 60 * 1000);
+            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
+            return readingNearTimeStamp(startTime, margin);
+        }
     }
 
     public static BgReading readingNearTimeStamp(long startTime, final long margin) {
@@ -1290,7 +1297,7 @@ public class BgReading extends Model implements ShareUploadableBg {
         if (bgr != null) {
             try {
                 if (readingNearTimeStamp(bgr.timestamp) == null) {
-                    FixCalibration(bgr);
+//                    FixCalibration(bgr);
                     if (force_sensor) {
                         final Sensor forced_sensor = Sensor.currentSensor();
                         if (forced_sensor != null) {
