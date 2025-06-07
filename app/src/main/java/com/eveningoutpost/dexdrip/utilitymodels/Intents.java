@@ -100,4 +100,8 @@ public interface Intents {
     String ROW_ID = "RowId";
 
     String PREFERENCE_INTENT = "com.eveningoutpost.dexdrip.utils.PROGRESS";
+
+    // OttaiAdd commentMore actions
+    String OTTAI_APP = "com.eveningoutpost.dexdrip.action.OTTAI_APP";
+    String OTTAI_CN_APP = "com.eveningoutpost.dexdrip.OT_APP";
 }

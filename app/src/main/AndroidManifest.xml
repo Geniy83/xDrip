@@ -587,6 +587,12 @@
                 <action android:name="com.eveningoutpost.dexdrip.OOP2_BLUETOOTH_ENABLE_RESULT" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".OttaiAppReceiver">
+            <intent-filter>
+                <action android:name="com.eveningoutpost.dexdrip.action.OTTAI_APP" />
+                <action android:name="com.eveningoutpost.dexdrip.OT_APP" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".receivers.aidex.AidexReceiver">
             <intent-filter>
                 <action android:name="com.microtechmd.cgms.aidex.action.BgEstimate" />
