@@ -58,8 +58,11 @@ public class UiBasedCollector extends NotificationListenerService {
     private static final String UI_BASED_STORE_LAST_VALUE = "UI_BASED_STORE_LAST_VALUE";
     private static final String UI_BASED_STORE_LAST_REPEAT = "UI_BASED_STORE_LAST_REPEAT";
     private static final String COMPANION_APP_IOB_ENABLED_PREFERENCE_KEY = "fetch_iob_from_companion_app";
+    // Хранилище для значения IOB (Insulin On Board) от компаньон-приложений
+    // Использует Persist.DoubleTimeout для автоматического очищения данных через 5 минут
+    // Ключ: "COMPANION_APP_IOB_VALUE", таймаут: 5 минут (Constants.MINUTE_IN_MS * 5)
     private static final Persist.DoubleTimeout iob_store =
-            new Persist.DoubleTimeout("COMPANION_APP_IOB_VALUE", Constants.MINUTE_IN_MS * 5);
+            new Persist.DoubleTimeout("COMPANION_APP_IOB_VALUE", Constants.MINUTE_IN_MS * 1);
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
     private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
 
@@ -67,7 +70,7 @@ public class UiBasedCollector extends NotificationListenerService {
     private static final HashSet<String> coOptedPackagesAll = new HashSet<>();
     private static final HashSet<String> companionAppIoBPackages = new HashSet<>();
     private static final HashSet<Pattern> companionAppIoBRegexes = new HashSet<>();
-    private static boolean debug = false;
+    private static boolean debug = true;
 
     @VisibleForTesting
     String lastPackage;
@@ -103,10 +106,6 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackages.add("com.senseonics.gen12androidapp");
         coOptedPackages.add("com.senseonics.androidapp");
         coOptedPackages.add("com.microtech.aidexx.mgdl");
-        coOptedPackages.add("com.microtech.aidexx.linxneo.mmoll");
-        coOptedPackages.add("com.microtech.aidexx.equil.mmoll");
-        coOptedPackages.add("com.microtech.aidexx.diaexport.mmoll"); //for microtech germany version, typo is intentional!
-        coOptedPackages.add("com.microtech.aidexx.smart.mmoll"); //for microtech Brazil version
         coOptedPackages.add("com.ottai.seas");
         coOptedPackages.add("com.microtech.aidexx"); //for microtech china version
         coOptedPackages.add("com.ottai.tag"); // //for ottai china version
@@ -115,8 +114,8 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackages.add("com.sinocare.cgm.ce");
         coOptedPackages.add("com.sinocare.ican.health.ce");
         coOptedPackages.add("com.sinocare.ican.health.ru");
-        coOptedPackages.add("com.suswel.ai");
-        coOptedPackages.add("com.glucotech.app.android");
+        coOptedPackages.add("com.soniejka.blueberry_app");
+        coOptedPackages.add("com.anytime.rus");
 
         coOptedPackagesAll.add("com.dexcom.dexcomone");
         coOptedPackagesAll.add("com.dexcom.d1plus");
@@ -126,10 +125,6 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackagesAll.add("com.senseonics.gen12androidapp");
         coOptedPackagesAll.add("com.senseonics.androidapp");
         coOptedPackagesAll.add("com.microtech.aidexx.mgdl");
-        coOptedPackagesAll.add("com.microtech.aidexx.linxneo.mmoll");
-        coOptedPackagesAll.add("com.microtech.aidexx.equil.mmoll");
-        coOptedPackagesAll.add("com.microtech.aidexx.diaexport.mmoll");
-        coOptedPackagesAll.add("com.microtech.aidexx.smart.mmoll"); //for microtech Brazil version
         coOptedPackagesAll.add("com.ottai.seas");
         coOptedPackagesAll.add("com.microtech.aidexx"); //for microtech china version
         coOptedPackagesAll.add("com.ottai.tag"); // //for ottai china version
@@ -138,17 +133,14 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackagesAll.add("com.sinocare.cgm.ce");
         coOptedPackagesAll.add("com.sinocare.ican.health.ce");
         coOptedPackagesAll.add("com.sinocare.ican.health.ru");
-        coOptedPackagesAll.add("com.suswel.ai");
-        coOptedPackagesAll.add("com.glucotech.app.android");
+        coOptedPackagesAll.add("com.soniejka.blueberry_app");
+        coOptedPackagesAll.add("com.anytime.rus");
 
         companionAppIoBPackages.add("com.insulet.myblue.pdm");
-        companionAppIoBPackages.add("com.medtronic.diabetes.minimedmobile.eu");
 
         // The IoB value should be captured into the first match group.
         // English localization of the Omnipod 5 App
         companionAppIoBRegexes.add(Pattern.compile("IOB: ([\\d\\.,]+) U"));
-        // MiniMed Mobile (EU): "Active Insulin" label and "1.234 U" value in separate TextViews
-        companionAppIoBRegexes.add(Pattern.compile("^([\\d\\.]+) U$"));
     }
 
     @Override
@@ -182,24 +174,10 @@ public class UiBasedCollector extends NotificationListenerService {
         if (notification.contentView != null) {
             processCompanionAppIoBNotificationCV(notification.contentView);
         } else {
-            processCompanionAppIoBNotificationTitle(notification);
+            UserError.Log.e(TAG, "Content is empty");
         }
     }
 
-    private void processCompanionAppIoBNotificationTitle(final Notification notification) {
-        Double iob = null;
-        try {
-            String notificationTitle = notification.extras.getString("android.title");
-            iob = parseIoB(notificationTitle);
-
-            if (iob != null) {
-                if (debug) UserError.Log.d(TAG, "Inserting new IoB value extracted from title: " + iob);
-                iob_store.set(iob);
-            }
-        } catch (Exception e) {
-            UserError.Log.e(TAG, "exception in processCompanionAppIoBNotificationTitle: " + e);
-        }
-    }
     private void processCompanionAppIoBNotificationCV(final RemoteViews cview) {
         if (cview == null) return;
         val applied = cview.apply(this, null);
@@ -221,7 +199,7 @@ public class UiBasedCollector extends NotificationListenerService {
             }
 
             if (iob != null) {
-                if (debug) UserError.Log.d(TAG, "Inserting new IoB value extracted from CV: " + iob);
+                if (debug) UserError.Log.d(TAG, "Inserting new IoB value: " + iob);
                 iob_store.set(iob);
             }
         } catch (Exception e) {
@@ -290,6 +268,12 @@ public class UiBasedCollector extends NotificationListenerService {
     String filterString(final String value) {
         if (lastPackage == null) return value;
         switch (lastPackage) {
+            case "com.soniejka.blueberry_app":
+                // Для Blueberry App: "Глюкоза: 9,7 →" → "9,7"
+                return basicFilterString(arrowFilterString(value))
+                        .replace("Глюкоза:", "")
+                        .replace("Glucose:", "")
+                        .trim();
             default:
                 return (basicFilterString(arrowFilterString(value)))
                         .trim();
@@ -410,7 +394,7 @@ public class UiBasedCollector extends NotificationListenerService {
                 } else {
                     UserError.Log.d(TAG, "Inserting new value");
                     PersistentStore.setLong(UI_BASED_STORE_LAST_VALUE, mgdl);
-                    val bgr = BgReading.bgReadingInsertFromG5(mgdl, timestamp);
+                    val bgr = BgReading.bgReadingInsertLibre2(mgdl, timestamp, mgdl);
                     if (bgr != null) {
                         bgr.find_slope();
                         bgr.noRawWillBeAvailable();
