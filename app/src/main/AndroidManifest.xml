@@ -636,6 +636,16 @@
                 <action android:name="com.eveningoutpost.dexdrip.OT_APP" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".DashxAppReceiver">
+            <intent-filter>
+                <action android:name="com.eveningoutpost.dexdrip.action.DashX" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".SyaiAppReceiver">
+            <intent-filter>
+                <action android:name="com.eveningoutpost.dexdrip.NS_EMULATOR" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".receivers.aidex.AidexReceiver">
             <intent-filter>
                 <action android:name="com.microtechmd.cgms.aidex.action.BgEstimate" />

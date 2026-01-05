@@ -1304,7 +1304,7 @@
                     android:switchTextOn="@string/short_on_text_for_switches"
                     android:title="@string/plugin_override_all" />
                 <CheckBoxPreference
-                    android:defaultValue="true"
+                    android:defaultValue="false"
                     android:key="use_double_calibrations"
                     android:summary="@string/summary_Ask_for_a_second_optional_initial_calibration_blood_test"
                     android:title="@string/title_Double_Calibrations" />
@@ -1325,7 +1325,7 @@
                     android:summary="@string/summary_Enable_to_allow_variable_slopes_with_Libre_collection_methods"
                     android:title="@string/title_Non_fixed_Libre_slopes" />
                 <CheckBoxPreference
-                    android:defaultValue="false"
+                    android:defaultValue="true"
                     android:key="use_non_fixed_li_patched_parameters"
                     android:summary="@string/summary_Enable_to_allow_variable_slopes_with_Libre_patched_collection_methods"
                     android:title="@string/title_Non_fixed_Libre_patched_slopes" />

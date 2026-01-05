@@ -13,8 +13,10 @@
         <item>xDrip+ Sync Follower</item>
         <item>LibreAlarm</item>
         <item>Libre (patched App)</item>
+        <item>DashX</item>
         <item>640G / EverSense</item>
         <item>Ottai</item>
+        <item>Syai</item>
         <item>Medtrum A6</item>
         <item>Nightscout Follower</item>
         <item>Dex Share Follower</item>
@@ -39,8 +41,10 @@
         <item>Follower</item>
         <item>LibreAlarm</item>
         <item>LibreReceiver</item>
+        <item>DashxAppReceiver</item>
         <item>NSEmulator</item>
         <item>OttaiAppReceiver</item>
+        <item>SyaiAppReceiver</item>
         <item>Medtrum</item>
         <item>NSFollower</item>
         <item>SHFollower</item>
