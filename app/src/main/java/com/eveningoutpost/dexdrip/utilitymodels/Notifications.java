@@ -227,6 +227,12 @@ public class Notifications extends IntentService {
             AlertType activeBgAlert = ActiveBgAlert.alertTypegetOnly();
             if (activeBgAlert == null) {
                 Log.d(TAG, "FileBasedNotifications we have a new alert, starting to play it... " + newAlert.name);
+                // Trigger emergency message if enabled for triggered alerts
+                if (!newAlert.above) {
+                    com.eveningoutpost.dexdrip.eassist.EmergencyAssist.activateTriggered(com.eveningoutpost.dexdrip.eassist.EmergencyAssist.Reason.LOW_ALERT_TRIGGERED);
+                } else {
+                    com.eveningoutpost.dexdrip.eassist.EmergencyAssist.activateTriggered(com.eveningoutpost.dexdrip.eassist.EmergencyAssist.Reason.HIGH_ALERT_TRIGGERED);
+                }
                 // We need to create a new alert  and start playing
                 boolean trendingToAlertEnd = trendingToAlertEnd(context, true, newAlert);
                 AlertPlayer.getPlayer().startAlert(context, trendingToAlertEnd, newAlert, EditAlertActivity.unitsConvert2Disp(doMgdl, calculated_value));

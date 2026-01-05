@@ -39,6 +39,7 @@ import static android.provider.ContactsContract.CommonDataKinds.Phone;
 import static com.eveningoutpost.dexdrip.eassist.EmergencyAssist.EMERGENCY_ASSIST_PREF;
 import static com.eveningoutpost.dexdrip.eassist.EmergencyAssist.EMERGENCY_HIGH_MINS_PREF;
 import static com.eveningoutpost.dexdrip.eassist.EmergencyAssist.EMERGENCY_LOW_MINS_PREF;
+import static com.eveningoutpost.dexdrip.eassist.EmergencyAssist.EMERGENCY_MESSAGE_TYPE_PREF;
 
 import static com.eveningoutpost.dexdrip.xdrip.gs;
 
@@ -166,6 +167,22 @@ public class EmergencyAssistActivity extends BaseAppCompatActivity {
 
     public void testButton(View v) {
         EmergencyAssist.test(EmergencyAssist.Reason.TESTING_FEATURE, Constants.HOUR_IN_MS);
+    }
+
+    public void setMessageTypeLocation(View v) {
+        setMessageType("location");
+    }
+
+    public void setMessageTypeGlucose(View v) {
+        setMessageType("glucose");
+    }
+
+    private void setMessageType(String type) {
+        EmergencyAssist.setMessageType(type);
+        sprefs.put(EMERGENCY_MESSAGE_TYPE_PREF, type);
+        // Update preview
+        model.getExtendedReasonText();
+        binding.invalidateAll();
     }
 
     public void masterEnable() {
