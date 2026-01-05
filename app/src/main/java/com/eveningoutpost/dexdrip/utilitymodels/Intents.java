@@ -104,4 +104,9 @@ public interface Intents {
     // OttaiAdd commentMore actions
     String OTTAI_APP = "com.eveningoutpost.dexdrip.action.OTTAI_APP";
     String OTTAI_CN_APP = "com.eveningoutpost.dexdrip.OT_APP";
+
+    String SYAI_TAG_APP = "com.eveningoutpost.dexdrip.NS_EMULATOR";
+
+    // DashXAdd commentMore actions
+    String DashX = "com.eveningoutpost.dexdrip.action.DashX";
 }

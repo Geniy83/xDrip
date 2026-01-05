@@ -75,6 +75,9 @@ public class SourceWizard {
             //
             other.addChild(new Item("EverSense", DexCollectionType.NSEmulator, R.drawable.wikimedia_eversense_icon_pbroks13));
             other.addChild(new Item("Ottai", DexCollectionType.OttaiAppReceiver, R.drawable.ic_syai_tag));
+            other.addChild(new Item("Syai", DexCollectionType.SyaiAppReceiver, R.drawable.ic_syai_tag));
+            other.addChild(new Item("DashX", DexCollectionType.DashxAppReceiver, R.drawable.ic_syai_tag));
+
         }
     }
 

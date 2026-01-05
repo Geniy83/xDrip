@@ -1,6 +1,6 @@
 package com.eveningoutpost.dexdrip.utils;
 
-import com.eveningoutpost.dexdrip.OttaiAppReceiver;
+import com.eveningoutpost.dexdrip.SyaiAppReceiver;
 import com.eveningoutpost.dexdrip.services.DexCollectionService;
 import com.eveningoutpost.dexdrip.services.DexShareCollectionService;
 import com.eveningoutpost.dexdrip.services.DoNothingService;
@@ -54,7 +54,9 @@ public enum DexCollectionType {
     Manual("Manual"),
     LibreReceiver("LibreReceiver"),
     AidexReceiver("AidexReceiver"),
-    OttaiAppReceiver("OttaiAppReceiver");
+    OttaiAppReceiver("OttaiAppReceiver"),
+    SyaiAppReceiver("SyaiAppReceiver"),
+    DashxAppReceiver("DashxAppReceiver");
 
     String internalName;
     private static final Map<String, DexCollectionType> mapToInternalName;
@@ -87,7 +89,7 @@ public enum DexCollectionType {
         Collections.addAll(usesXbridge, DexbridgeWixel, WifiDexBridgeWixel);
         Collections.addAll(usesFiltered, DexbridgeWixel, WifiDexBridgeWixel, DexcomG5, WifiWixel, Follower, Mock); // Bluetooth and Wifi+Bluetooth need dynamic mode
         Collections.addAll(usesLibre, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi, LibreReceiver);
-        Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver, OttaiAppReceiver);
+        Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver, OttaiAppReceiver, SyaiAppReceiver, DashxAppReceiver);
         Collections.addAll(usesBattery, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel, Follower, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi); // parakeet separate
         Collections.addAll(usesDexcomRaw, BluetoothWixel, DexbridgeWixel, WifiWixel, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, Mock);
         Collections.addAll(usesTransmitterBattery, WifiWixel, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel); // G4 transmitter battery
@@ -268,7 +270,10 @@ public enum DexCollectionType {
             case AidexReceiver:
             case LibreReceiver:
             case OttaiAppReceiver:
+            case SyaiAppReceiver:
                 return "Other App";
+            case DashxAppReceiver:
+                return "DashX App";
             case WifiWixel:
                 return "Network G4";
             case LimiTTer:
@@ -348,6 +353,8 @@ public enum DexCollectionType {
                 return libreOneMinute ? 60_000 : 300_000;
             case Follower:
                 return libreOneMinuteFollowers ? 59_000 : 240_000;
+            case DashxAppReceiver:
+                return 60_000;
             default:
                 return 300_000; // 5 minutes
         }

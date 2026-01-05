@@ -516,7 +516,7 @@
                 android:summary="@string/summary_high_priority_notifications"
                 android:title="@string/title_high_priority_notifications" />
             <CheckBoxPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:key="public_notifications"
                 android:summary="@string/summary_public_notifications"
                 android:title="@string/title_public_notifications" />
