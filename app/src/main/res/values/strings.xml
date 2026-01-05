@@ -1022,10 +1022,16 @@
     <string name="is_requesting_assistance">%s is Requesting assistance</string>
     <string name="is_testing_the_assistance_request_feature">%s is testing the assistance request feature</string>
     <string name="emergency_message_near_format_string">%1$s near %2$s %3$s %4$s %5$s</string>
+    <string name="emergency_message_glucose_format_string">Glucose: %1$s %2$s %3$s</string>
+    <string name="emergency_message_type">Message type</string>
+    <string name="emergency_message_type_location">Location</string>
+    <string name="emergency_message_type_glucose">Glucose value</string>
     <string name="choose_when_to_send_messages">Choose when to send messages:</string>
     <string name="low_alert_not_acknowledged">Low Alert not acknowledged</string>
     <string name="lowest_alert_not_acknowledged">Lowest Alert not acknowledged</string>
     <string name="high_alert_not_acknowledged">High Alert not acknowledged</string>
+    <string name="low_alert_triggered">Low glucose alert triggered</string>
+    <string name="high_alert_triggered">High glucose alert triggered</string>
     <string name="device_inactivity">Device inactivity</string>
     <string name="test_message_sending">Test Message Sending</string>
     <string name="d_selected_contacts_for_text_messages_format">%d selected contacts for text messages</string>

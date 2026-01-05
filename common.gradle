@@ -62,7 +62,7 @@ ext.generateVersionName = { ->
             standardOutput = stdout
         }
         String branch = stdout.toString().trim()
-        if (!branch.equals("master")) {
+        if (!branch.equals("master") && !branch.equals("main") && !branch.equals("main-(without-Poctech)")) {
             stringBuilder.append('-')
             stringBuilder.append(branch)
         }

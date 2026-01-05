@@ -3,6 +3,7 @@ package com.eveningoutpost.dexdrip.eassist;
 import androidx.databinding.ObservableField;
 import android.os.PowerManager;
 
+import com.eveningoutpost.dexdrip.BestGlucose;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.UserError;
 import com.eveningoutpost.dexdrip.R;
@@ -30,6 +31,7 @@ public class EmergencyAssist {
     public static final String EMERGENCY_LOW_MINS_PREF = "emergency_assist_low_alert_minutes";
     public static final String EMERGENCY_LOWEST_MINS_PREF = "emergency_assist_lowest_alert_minutes";
     public static final String EMERGENCY_HIGH_MINS_PREF = "emergency_assist_high_alert_minutes";
+    public static final String EMERGENCY_MESSAGE_TYPE_PREF = "emergency_assist_message_type"; // "location" or "glucose"
 
     private static final String TAG = EmergencyAssist.class.getSimpleName();
     private final Reason reason;
@@ -72,6 +74,16 @@ public class EmergencyAssist {
         }
     }
 
+    // Immediate activation for triggered alerts (no time threshold)
+    public static void activateTriggered(final Reason reason) {
+        if (isEnabled(reason)) {
+            if (JoH.pratelimit("ea-triggered-" + reason.name(), MIN_MESSAGE_FREQUENCY)) {
+                UserError.Log.e(TAG, "Triggering immediate " + reason);
+                new EmergencyAssist(reason, 0, "").activate();
+            }
+        }
+    }
+
     public static boolean isEnabled() {
         return Pref.getBooleanDefaultFalse(EMERGENCY_ASSIST_PREF);
     }
@@ -85,6 +97,10 @@ public class EmergencyAssist {
                 return Pref.getBooleanDefaultFalse("emergency_assist_low_alert");
             case DID_NOT_ACKNOWLEDGE_HIGH_ALERT:
                 return Pref.getBooleanDefaultFalse("emergency_assist_high_alert");
+            case LOW_ALERT_TRIGGERED:
+                return Pref.getBooleanDefaultFalse("emergency_assist_low_alert_triggered");
+            case HIGH_ALERT_TRIGGERED:
+                return Pref.getBooleanDefaultFalse("emergency_assist_high_alert_triggered");
             case DEVICE_INACTIVITY:
                 return Pref.getBooleanDefaultFalse("emergency_assist_inactivity");
 
@@ -117,6 +133,10 @@ public class EmergencyAssist {
                 return getString(R.string.did_not_acknowledge_a_low_glucose_alert);
             case DID_NOT_ACKNOWLEDGE_HIGH_ALERT:
                 return getString(R.string.did_not_acknowledge_a_high_glucose_alert);
+            case LOW_ALERT_TRIGGERED:
+                return getString(R.string.low_alert_triggered);
+            case HIGH_ALERT_TRIGGERED:
+                return getString(R.string.high_alert_triggered);
             case EXTENDED_MISSED_READINGS:
                 return getString(R.string.has_not_had_glucose_data_received_for);
             case DEVICE_INACTIVITY:
@@ -220,6 +240,15 @@ public class EmergencyAssist {
     }
 
     public String getExtendedReasonText() {
+        final String messageType = getMessageType();
+        if ("glucose".equals(messageType)) {
+            return getGlucoseMessageText();
+        } else {
+            return getLocationMessageText();
+        }
+    }
+
+    private String getLocationMessageText() {
         final String timeText = JoH.niceTimeScalar(since);
         final String userText = getUsername();
         final String reasonText = String.format(getReasonText(reason), userText.length() > 0 ? userText : "Name not set", timeText);
@@ -231,6 +260,34 @@ public class EmergencyAssist {
         return lastExtendedText.get();
     }
 
+    private String getGlucoseMessageText() {
+        final BestGlucose.DisplayGlucose dg = BestGlucose.getDisplayGlucose();
+        if (dg == null) {
+            // Fallback to location message if glucose data is not available
+            return getLocationMessageText();
+        }
+        
+        final String glucoseValue = dg.unitized;
+        final String trendArrow = dg.delta_arrow != null && !dg.delta_arrow.isEmpty() ? dg.delta_arrow : "";
+        final String deltaText = dg.unitized_delta != null && !dg.unitized_delta.isEmpty() ? dg.unitized_delta : "";
+        
+        // Format: "Глюкоза: 5,1 ↓ -0.6 mmol/l"
+        final String message = String.format(getString(R.string.emergency_message_glucose_format_string),
+                glucoseValue, trendArrow, deltaText).trim();
+        lastExtendedText.set(message);
+        return lastExtendedText.get();
+    }
+
+    private static String getMessageType() {
+        return Pref.getString(EMERGENCY_MESSAGE_TYPE_PREF, "location");
+    }
+
+    public static void setMessageType(String type) {
+        if ("location".equals(type) || "glucose".equals(type)) {
+            Pref.setString(EMERGENCY_MESSAGE_TYPE_PREF, type);
+        }
+    }
+
     private static String getString(int id) {
         return xdrip.getAppContext().getString(id);
     }
@@ -239,6 +296,8 @@ public class EmergencyAssist {
         DID_NOT_ACKNOWLEDGE_LOWEST_ALERT,
         DID_NOT_ACKNOWLEDGE_LOW_ALERT,
         DID_NOT_ACKNOWLEDGE_HIGH_ALERT,
+        LOW_ALERT_TRIGGERED,
+        HIGH_ALERT_TRIGGERED,
         EXTENDED_MISSED_READINGS,
         DEVICE_INACTIVITY,
         REQUESTED_ASSISTANCE,

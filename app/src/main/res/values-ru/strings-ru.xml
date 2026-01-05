@@ -988,10 +988,16 @@
     <string name="is_requesting_assistance">%s запрашивает помощь</string>
     <string name="is_testing_the_assistance_request_feature">%s проверяет функцию запроса помощи</string>
     <string name="emergency_message_near_format_string">%1$s недалеко от %2$s %3$s %4$s %5$s</string>
+    <string name="emergency_message_glucose_format_string">Глюкоза: %1$s %2$s %3$s</string>
+    <string name="emergency_message_type">Тип сообщения</string>
+    <string name="emergency_message_type_location">Местоположение</string>
+    <string name="emergency_message_type_glucose">Значение глюкозы</string>
     <string name="choose_when_to_send_messages">Выберите, когда отправлять сообщения:</string>
     <string name="low_alert_not_acknowledged">Тревога о низком не подтверждена</string>
     <string name="lowest_alert_not_acknowledged">Тревога о самом низком не подтверждена</string>
     <string name="high_alert_not_acknowledged">Тревога о высоком не подтверждена</string>
+    <string name="low_alert_triggered">Когда срабатывает тревога о низкой глюкозе</string>
+    <string name="high_alert_triggered">Когда срабатывает тревога о высокой глюкозе</string>
     <string name="device_inactivity">Бездействие устройства</string>
     <string name="test_message_sending">Тестовое сообщение отправляется</string>
     <string name="d_selected_contacts_for_text_messages_format">%d выбранных контактов для текстовых сообщений</string>
