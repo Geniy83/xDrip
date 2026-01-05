@@ -210,6 +210,70 @@
           "duration": "2520"
         }
       }
-    }
+    },
+         {
+       "name": "Rosinsulin Aspart R",
+       "displayName": "Росинсулин Аспарт Р",
+       "concentration": "U100",
+       "PPN": [
+         "Rosinsulin-Aspart-R-U100"
+       ],
+       "Curve": {
+         "type": "linear trapezoid",
+         "data": {
+           "onset": "15",
+           "peak": "60-180",
+           "duration": "300"
+         }
+       }
+     },
+         {
+       "name": "Rinfast",
+       "displayName": "Ринфаст",
+       "concentration": "U100",
+       "PPN": [
+         "Rinfast-U100"
+       ],
+       "Curve": {
+         "type": "linear trapezoid",
+         "data": {
+           "onset": "15",
+           "peak": "60-180",
+           "duration": "300"
+         }
+       }
+     },
+         {
+       "name": "Rinfast Nic",
+       "displayName": "Ринфаст Ник",
+       "concentration": "U100",
+       "PPN": [
+         "Rinfast-Nic-U100"
+       ],
+       "Curve": {
+         "type": "linear trapezoid",
+         "data": {
+           "onset": "4",
+           "peak": "60-180",
+           "duration": "300"
+         }
+       }
+     },
+          {
+        "name": "Buzheton",
+        "displayName": "Бужетон",
+        "concentration": "U100",
+        "PPN": [
+          "Buzheton-U100"
+        ],
+        "Curve": {
+          "type": "linear trapezoid",
+          "data": {
+            "onset": "15",
+            "peak": "30-150",
+            "duration": "240"
+          }
+        }
+      }
   ]
 }
