@@ -354,7 +354,9 @@ public enum DexCollectionType {
             case Follower:
                 return libreOneMinuteFollowers ? 59_000 : 240_000;
             case DashxAppReceiver:
-                return 60_000;
+                return 60_000; // 1 minutes
+            case UiBased:
+                return 180_000; // 3 minutes
             default:
                 return 300_000; // 5 minutes
         }
