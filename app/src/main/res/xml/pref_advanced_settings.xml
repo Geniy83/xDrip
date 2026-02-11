@@ -1667,6 +1667,14 @@
                     android:title="@string/follower_one_minute_title" />
 
                 <CheckBoxPreference
+                        android:defaultValue="false"
+                        android:dependency="engineering_mode"
+                        android:enabled="true"
+                        android:key="ns_follower_one_minute"
+                        android:summary="@string/ns_follower_one_minute_summary"
+                        android:title="@string/ns_follower_one_minute_title" />
+
+                <CheckBoxPreference
                     android:defaultValue="false"
                     android:dependency="allow_testing_with_dead_sensor"
                     android:key="allow_testing_with_dead_sensor"

@@ -1958,6 +1958,8 @@
     <string name="libre_one_minute_summary">Accept data at one minute intervals from Libre source. WARNING: This feature is still under development and may break different things. Currently only for patched app data source. Please report anything you notice not working and to activate changes to this setting you need to reboot your phone. Requires engineering mode to be enabled to change setting.</string>
     <string name="follower_one_minute_title">Follower one minute</string>
     <string name="follower_one_minute_summary">Accept data at one minute intervals from xDrip+ Sync Follower source. WARNING: This feature is still under development and may break different things. Please report anything you notice not working and to activate changes to this setting you need to reboot your phone. Requires engineering mode to be enabled to change setting.</string>
+    <string name="ns_follower_one_minute_title">NSFollower one minute</string>
+    <string name="ns_follower_one_minute_summary">Accept data at one minute intervals from Nightscout Follower source. WARNING: This feature is still under development and may break different things. Please report anything you notice not working and to activate changes to this setting you need to reboot your phone. Requires engineering mode to be enabled to change setting.</string>
     <string name="cant_use_this_sensor_as_it_is">Can\'t use this sensor as it is</string>
     <string name="sensor_status_not_yet_started">not yet started</string>
     <string name="sensor_status_starting">starting</string>

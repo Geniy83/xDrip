@@ -379,10 +379,15 @@ public enum DexCollectionType {
     private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
             && Pref.getBooleanDefaultFalse("engineering_mode");
 
+    private static final boolean oneMinuteNSFollowers = Pref.getBooleanDefaultFalse("ns_follower_one_minute")
+            && Pref.getBooleanDefaultFalse("engineering_mode");
+
     public static long getCollectorSamplePeriod(final DexCollectionType type) {
         switch (type) {
             case LibreReceiver:
                 return libreOneMinute ? 60_000 : 300_000;
+            case NSFollow:
+                return oneMinuteNSFollowers ? 59_000 : 240_000;
             case Follower:
                 return libreOneMinuteFollowers ? 59_000 : 240_000;
             case DashxAppReceiver:

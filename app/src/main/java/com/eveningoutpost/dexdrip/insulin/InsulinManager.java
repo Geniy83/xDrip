@@ -186,10 +186,28 @@ public class InsulinManager {
             Log.d(TAG, "InsulinManager seems not load Profiles beforehand");
             return null;
         }
-        name = name.toLowerCase();
-        // TODO consider hashmap maybe? how many could be iterated here?
+        if (name == null || name.isEmpty()) return null;
+        final String nameLower = name.toLowerCase().trim();
+        // 1) Exact match by internal name (e.g. "Rosinsulin Aspart R")
         for (Insulin i : profiles) {
-            if (i.getName().toLowerCase().equals(name))
+            if (i.getName().toLowerCase().equals(nameLower))
+                return i;
+        }
+        // 2) Match by displayName (e.g. "Росинсулин Аспарт Р" from UI/prefs)
+        for (Insulin i : profiles) {
+            if (i.getDisplayName() != null && i.getDisplayName().toLowerCase().equals(nameLower))
+                return i;
+        }
+        // 3) Name contains search string (e.g. "rosinsulin" -> "Rosinsulin Aspart R")
+        for (Insulin i : profiles) {
+            if (!isProfileEnabled(i)) continue;
+            if (i.getName().toLowerCase().contains(nameLower))
+                return i;
+        }
+        // 4) DisplayName contains search string
+        for (Insulin i : profiles) {
+            if (!isProfileEnabled(i)) continue;
+            if (i.getDisplayName() != null && i.getDisplayName().toLowerCase().contains(nameLower))
                 return i;
         }
         return null;
