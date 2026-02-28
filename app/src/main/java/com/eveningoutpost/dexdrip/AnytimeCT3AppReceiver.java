@@ -18,9 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class DashxAppReceiver extends BroadcastReceiver {
-
-    private static final String TAG = "Dashx";
+public class AnytimeCT3AppReceiver extends BroadcastReceiver {
+    private static final String TAG = "AnytimeCT3";
     private static final boolean debug = false;
     private static final boolean d = false;
     private static SharedPreferences prefs;
@@ -31,20 +30,17 @@ public class DashxAppReceiver extends BroadcastReceiver {
         new Thread() {
             @Override
             public void run() {
-                PowerManager.WakeLock wl = JoH.getWakeLock("dashx-receiver", 60000);
+                PowerManager.WakeLock wl = JoH.getWakeLock("anytimeCT3-receiver", 60000);
                 synchronized (lock) {
                     try {
 
-                        UserError.Log.d(TAG, "dashx onReceiver: " + intent.getAction());
+                        UserError.Log.d(TAG, "anytimeCT3 onReceiver: " + intent.getAction());
                         JoH.benchmark(null);
-                        // check source
                         if (prefs == null)
                             prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
                         final Bundle bundle = intent.getExtras();
-                        //  BundleScrubber.scrub(bundle);
                         final String action = intent.getAction();
-
 
                         if ((bundle != null) && (debug)) {
                             UserError.Log.d(TAG, "Action: " + action);
@@ -54,12 +50,12 @@ public class DashxAppReceiver extends BroadcastReceiver {
                         if (action == null) return;
 
                         switch (action) {
-                            case Intents.DashX:
+                            case Intents.AnytimeCT3:
 
                                 // in future this could have its own data source perhaps instead of follower
-                                if (!Home.get_follower() && DexCollectionType.getDexCollectionType() != DexCollectionType.DashxAppReceiver &&
+                                if (!Home.get_follower() && DexCollectionType.getDexCollectionType() != DexCollectionType.AnytimeCT3AppReceiver &&
                                         !Pref.getBooleanDefaultFalse("external_blukon_algorithm")) {
-                                    UserError.Log.e(TAG, "Received DashX data but we are not a follower or DashX receiver");
+                                    UserError.Log.e(TAG, "Received AnytimeCT3 data but we are not a follower or AnytimeCT3 receiver");
                                     return;
                                 }
 
@@ -72,7 +68,7 @@ public class DashxAppReceiver extends BroadcastReceiver {
 
                                 if (bundle == null) break;
 
-                                UserError.Log.d(TAG, "Receiving DashX broadcast");
+                                UserError.Log.d(TAG, "Receiving AnytimeCT3 broadcast");
 
                                 final String collection = bundle.getString("collection");
                                 if (collection == null) return;
@@ -124,7 +120,7 @@ public class DashxAppReceiver extends BroadcastReceiver {
                     } catch (Exception e) {
                         UserError.Log.e(TAG, "Caught Exception handling intent", e );
                     }finally {
-                        JoH.benchmark("DashX process");
+                        JoH.benchmark("AnytimeCT3 process");
                         JoH.releaseWakeLock(wl);
                     }
                 } // lock
@@ -133,7 +129,7 @@ public class DashxAppReceiver extends BroadcastReceiver {
     }
 
     public static BgReading bgReadingInsertFromData(long timestamp, double sgv, double slope, boolean do_notification) {
-        UserError.Log.d(TAG, "DasX bgReadingInsertFromData called timestamp = " + timestamp + " bg = " + sgv + " time =" + JoH.dateTimeText(timestamp));
+        UserError.Log.d(TAG, "AnytimeCT3 bgReadingInsertFromData called timestamp = " + timestamp + " bg = " + sgv + " time =" + JoH.dateTimeText(timestamp));
         Sensor.createDefaultIfMissing();
 
         return BgReading.bgReadingInsertLibre2(sgv, timestamp, sgv); // notify and force sensor

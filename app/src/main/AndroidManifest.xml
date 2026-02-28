@@ -641,6 +641,11 @@
                 <action android:name="com.eveningoutpost.dexdrip.action.DashX" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".AnytimeCT3AppReceiver">
+            <intent-filter>
+                <action android:name="com.eveningoutpost.dexdrip.action.AnytimeCT3" />
+            </intent-filter>
+        </receiver>
         <receiver android:name=".SyaiAppReceiver">
             <intent-filter>
                 <action android:name="com.eveningoutpost.dexdrip.NS_EMULATOR" />
