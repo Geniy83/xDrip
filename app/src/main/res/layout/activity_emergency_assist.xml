@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
-                android:hint="Turn feature off/on"
+                android:hint="@string/turn_feature_off_on"
                 android:switchMinWidth="55dp"
                 android:text="@string/emergency_message_feature"
                 android:textSize="18sp"
@@ -76,6 +76,40 @@
                 android:lines="1"
                 android:maxLines="1"
                 android:text="@={model.username}" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="5dp"
+                android:text="@string/emergency_message_type"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/radioLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:checked="@{sprefs[`emergency_assist_message_type`] == null || sprefs[`emergency_assist_message_type`].equals(`location`)}"
+                    android:onClick="setMessageTypeLocation"
+                    android:text="@string/emergency_message_type_location" />
+
+                <RadioButton
+                    android:id="@+id/radioGlucose"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:checked="@{sprefs[`emergency_assist_message_type`] != null &amp;&amp; sprefs[`emergency_assist_message_type`].equals(`glucose`)}"
+                    android:onClick="setMessageTypeGlucose"
+                    android:text="@string/emergency_message_type_glucose" />
+
+            </LinearLayout>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -265,6 +299,28 @@
                     android:text="@{activity.prettyMinutes(sprefs[`emergency_assist_high_alert_minutes`])}" />
 
             </LinearLayout>
+
+            <Switch
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_weight="1"
+                android:text="@string/low_alert_triggered"
+                appx:boldIfTrue="@{prefs[`emergency_assist_low_alert_triggered`]}"
+                appx:checked="@={prefs[`emergency_assist_low_alert_triggered`]}" />
+
+            <Switch
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_weight="1"
+                android:text="@string/high_alert_triggered"
+                appx:boldIfTrue="@{prefs[`emergency_assist_high_alert_triggered`]}"
+                appx:checked="@={prefs[`emergency_assist_high_alert_triggered`]}" />
 
             <Switch
                 android:id="@+id/switch4"

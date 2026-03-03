@@ -1,5 +1,7 @@
 package com.eveningoutpost.dexdrip.utils;
 
+import com.eveningoutpost.dexdrip.AnytimeCT3AppReceiver;
+import com.eveningoutpost.dexdrip.SyaiAppReceiver;
 import com.eveningoutpost.dexdrip.services.DexCollectionService;
 import com.eveningoutpost.dexdrip.services.DexShareCollectionService;
 import com.eveningoutpost.dexdrip.services.DoNothingService;
@@ -14,6 +16,7 @@ import com.eveningoutpost.dexdrip.cgm.nsfollow.NightscoutFollowService;
 import com.eveningoutpost.dexdrip.cgm.sharefollow.ShareFollowService;
 import com.eveningoutpost.dexdrip.cgm.webfollow.WebFollowService;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.CareLinkFollowService;
+import com.eveningoutpost.dexdrip.cgm.glupro.GluProService;
 
 import static com.eveningoutpost.dexdrip.g5model.Ob1G5StateMachine.shortTxId;
 
@@ -50,24 +53,33 @@ public enum DexCollectionType {
     CLFollow("CLFollower"),
     Medtrum("Medtrum"),
     UiBased("UiBased"),
+    GluPro("GluPro"),
     Disabled("Disabled"),
     Mock("Mock"),
     Manual("Manual"),
     LibreReceiver("LibreReceiver"),
-    AidexReceiver("AidexReceiver");
+    AidexReceiver("AidexReceiver"),
+    OttaiAppReceiver("OttaiAppReceiver"),
+    SyaiAppReceiver("SyaiAppReceiver"),
+    DashxAppReceiver("DashxAppReceiver"),
+    AnytimeCT3AppReceiver("AnytimeCT3AppReceiver");
 
     String internalName;
     private static final Map<String, DexCollectionType> mapToInternalName;
     private static final HashSet<DexCollectionType> usesBluetooth = new HashSet<>();
+    private static final HashSet<DexCollectionType> usesBluetoothScan = new HashSet<>();
     private static final HashSet<DexCollectionType> usesBtWixel = new HashSet<>();
     private static final HashSet<DexCollectionType> usesWifi = new HashSet<>();
     private static final HashSet<DexCollectionType> usesXbridge = new HashSet<>();
     private static final HashSet<DexCollectionType> usesFiltered = new HashSet<>();
     private static final HashSet<DexCollectionType> usesLibre = new HashSet<>();
     private static final HashSet<DexCollectionType> isPassive = new HashSet<>();
+    private static final HashSet<DexCollectionType> canNotStartStopOrCal = new HashSet<>();
+    private static final HashSet<DexCollectionType> alwaysNativeCal = new HashSet<>();
     private static final HashSet<DexCollectionType> usesBattery = new HashSet<>();
     private static final HashSet<DexCollectionType> usesDexcomRaw = new HashSet<>();
     private static final HashSet<DexCollectionType> usesTransmitterBattery = new HashSet<>();
+    private static final HashSet<DexCollectionType> newerCollector = new HashSet<>();
 
     public static final String DEX_COLLECTION_METHOD = "dex_collection_method";
 
@@ -81,16 +93,20 @@ public enum DexCollectionType {
             mapToInternalName.put(dct.internalName, dct);
         }
 
-        Collections.addAll(usesBluetooth, BluetoothWixel, DexcomShare, DexbridgeWixel, LimiTTer, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, LimiTTerWifi, Medtrum, PoctechCT14);
+        Collections.addAll(usesBluetooth, BluetoothWixel, DexcomShare, DexbridgeWixel, LimiTTer, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, LimiTTerWifi, Medtrum, GluPro);
+        Collections.addAll(usesBluetoothScan, BluetoothWixel, DexcomShare, DexbridgeWixel, LimiTTer, WifiBlueToothWixel, WifiDexBridgeWixel, LimiTTerWifi, Medtrum);
         Collections.addAll(usesBtWixel, BluetoothWixel, LimiTTer, WifiBlueToothWixel, LimiTTerWifi); // Name is misleading here, should probably be using dexcollectionservice
         Collections.addAll(usesWifi, WifiBlueToothWixel, WifiWixel, WifiDexBridgeWixel, Mock, LimiTTerWifi, LibreWifi);
         Collections.addAll(usesXbridge, DexbridgeWixel, WifiDexBridgeWixel);
         Collections.addAll(usesFiltered, DexbridgeWixel, WifiDexBridgeWixel, DexcomG5, WifiWixel, Follower, Mock, PoctechCT14); // Bluetooth and Wifi+Bluetooth need dynamic mode
         Collections.addAll(usesLibre, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi, LibreReceiver);
-        Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver);
+        Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver, OttaiAppReceiver, SyaiAppReceiver, DashxAppReceiver, AnytimeCT3AppReceiver);
+        Collections.addAll(canNotStartStopOrCal, NSFollow, SHFollow, WebFollow, CLFollow, Disabled); // Collectors that cannot start/stop sensor or submit calibration (UiBased removed to allow calibration entry)
+        Collections.addAll(alwaysNativeCal, Follower, GluPro); // always allow calibration entry
         Collections.addAll(usesBattery, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel, Follower, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi); // parakeet separate
         Collections.addAll(usesDexcomRaw, BluetoothWixel, DexbridgeWixel, WifiWixel, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, Mock, PoctechCT14);
         Collections.addAll(usesTransmitterBattery, WifiWixel, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel); // G4 transmitter battery
+        Collections.addAll(newerCollector, NSFollow, SHFollow, WebFollow, CLFollow, GluPro);
     }
 
 
@@ -115,8 +131,20 @@ public enum DexCollectionType {
         Pref.setString(DEX_COLLECTION_METHOD, t.internalName);
     }
 
+    public static boolean isG7() {
+        return DexCollectionType.getBestCollectorHardwareName().equals("G7");
+    }
+
     public static boolean hasBluetooth() {
         return usesBluetooth.contains(getDexCollectionType());
+    }
+
+    public static boolean isNewerCollector() {
+        return newerCollector.contains(getDexCollectionType());
+    }
+
+    public static boolean isAlwaysNativeCal() {
+        return alwaysNativeCal.contains(getDexCollectionType());
     }
 
     public static boolean hasBtWixel() {
@@ -153,6 +181,10 @@ public enum DexCollectionType {
 
     public static boolean usesDexCollectionService(DexCollectionType type) {
         return usesBtWixel.contains(type) || usesXbridge.contains(type) || type.equals(LimiTTer);
+    }
+
+    public static boolean usesBluetoothScan() {
+        return usesBluetoothScan.contains(getDexCollectionType());
     }
 
     public static boolean usesClassicTransmitterBattery() {
@@ -215,6 +247,8 @@ public enum DexCollectionType {
                 return UiBasedCollector.class;
             case CLFollow:
                 return CareLinkFollowService.class;
+            case GluPro:
+                return GluProService.class;
             default:
                 return DexCollectionService.class;
         }
@@ -269,7 +303,13 @@ public enum DexCollectionType {
             case NSEmulator:
             case AidexReceiver:
             case LibreReceiver:
+            case OttaiAppReceiver:
+            case SyaiAppReceiver:
                 return "Other App";
+            case DashxAppReceiver:
+                return "DashX App";
+            case AnytimeCT3AppReceiver:
+                return "AnytimeCT3 App";
             case WifiWixel:
                 return "Network G4";
             case LimiTTer:
@@ -295,7 +335,6 @@ public enum DexCollectionType {
                 return "Share";
             case UiBased:
                 return "UI Based";
-
             case CLFollow:
                 return "CareLink";
             default:
@@ -331,17 +370,41 @@ public enum DexCollectionType {
         return isPassive.contains(this);
     }
 
+    public boolean canNotStartStopOrCal() {
+        return canNotStartStopOrCal.contains(this);
+    }
+
     public long getSamplePeriod() {
+        return getCollectorSamplePeriod(this);
+    }
+
+    public long getSamplePeriodFollowers() {
         return getCollectorSamplePeriod(this);
     }
 
     private static final boolean libreOneMinute = Pref.getBooleanDefaultFalse("libre_one_minute")
             && Pref.getBooleanDefaultFalse("engineering_mode");
 
+    private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
+            && Pref.getBooleanDefaultFalse("engineering_mode");
+
+    private static final boolean oneMinuteNSFollowers = Pref.getBooleanDefaultFalse("ns_follower_one_minute")
+            && Pref.getBooleanDefaultFalse("engineering_mode");
+
     public static long getCollectorSamplePeriod(final DexCollectionType type) {
         switch (type) {
             case LibreReceiver:
                 return libreOneMinute ? 60_000 : 300_000;
+            case NSFollow:
+                return oneMinuteNSFollowers ? 59_000 : 240_000;
+            case Follower:
+                return libreOneMinuteFollowers ? 59_000 : 240_000;
+            case DashxAppReceiver:
+                return 60_000; // 1 minutes
+            case AnytimeCT3AppReceiver:
+                return 60_000; // 1 minutes
+            case UiBased:
+                return 180_000; // 3 minutes
             default:
                 return 300_000; // 5 minutes
         }
@@ -356,9 +419,8 @@ public enum DexCollectionType {
         return period - (period / 6); // TODO this needs more validation
     }
 
-    public static int getCurrentSamplesForPeriod(final long periodMs) {
-        return (int) (periodMs / getDexCollectionType().getSamplePeriod());
+    public static long getCurrentPeriodFollowers() {
+        return getDexCollectionType().getSamplePeriodFollowers();
     }
-
 
 }

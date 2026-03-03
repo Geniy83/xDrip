@@ -1,5 +1,6 @@
 package com.eveningoutpost.dexdrip.models;
 
+import static com.eveningoutpost.dexdrip.evaluators.PersistentHigh.persistentHighThreshold;
 import static com.eveningoutpost.dexdrip.g5model.Ob1G5StateMachine.shortTxId;
 import static com.eveningoutpost.dexdrip.importedlibraries.dexcom.Dex_Constants.TREND_ARROW_VALUES.NOT_COMPUTABLE;
 import static com.eveningoutpost.dexdrip.importedlibraries.dexcom.Dex_Constants.TREND_ARROW_VALUES.getTrend;
@@ -56,6 +57,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -483,6 +485,10 @@ public class BgReading extends Model implements ShareUploadableBg {
     }
 
     public static BgReading create(double raw_data, double filtered_data, Context context, Long timestamp, boolean quick) {
+        return create(raw_data, filtered_data, context, timestamp, quick, null);
+    }
+
+    public static BgReading create(double raw_data, double filtered_data, Context context, Long timestamp, boolean quick, String source_info) {
         if (context == null) context = xdrip.getAppContext();
         BgReading bgReading = new BgReading();
         final Sensor sensor = Sensor.currentSensor();
@@ -508,6 +514,7 @@ public class BgReading extends Model implements ShareUploadableBg {
             bgReading.calibration_flag = false;
 
             bgReading.calculateAgeAdjustedRawValue();
+            bgReading.source_info = source_info;
 
             bgReading.save();
             bgReading.perform_calculations();
@@ -515,6 +522,7 @@ public class BgReading extends Model implements ShareUploadableBg {
         } else {
             Log.d(TAG, "Calibrations, so doing everything: " + calibration.uuid);
             bgReading = createFromRawNoSave(sensor, calibration, raw_data, filtered_data, timestamp);
+            bgReading.source_info = source_info;
 
             bgReading.save();
 
@@ -679,7 +687,7 @@ public class BgReading extends Model implements ShareUploadableBg {
 
     public  String slopeName() {
         return hide_slope ? NOT_COMPUTABLE.trendName().replace("_", " ") :
-            slopeName(calculated_value_slope * 60000);
+                slopeName(calculated_value_slope * 60000);
     }
 
     public static String slopeName(double slope_by_minute) {
@@ -766,7 +774,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                     .from(BgReading.class)
                     .where("calculated_value != 0")
                     .where("raw_data != 0")
-              //      .where("timestamp <= ?", JoH.tsl())
+                    //      .where("timestamp <= ?", JoH.tsl())
                     .orderBy("timestamp desc")
                     .executeSingle();
         } else {
@@ -777,7 +785,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                         .where("Sensor = ? ", sensor.getId())
                         .where("calculated_value != 0")
                         .where("raw_data != 0")
-                //        .where("timestamp <= ?", JoH.tsl())
+                        //        .where("timestamp <= ?", JoH.tsl())
                         .orderBy("timestamp desc")
                         .executeSingle();
             }
@@ -802,7 +810,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                 .from(BgReading.class)
                 .where("calculated_value != 0")
                 .where("raw_data != 0")
-            //    .where("timestamp <= ?", JoH.tsl())
+                //    .where("timestamp <= ?", JoH.tsl())
                 .orderBy("timestamp desc")
                 .executeSingle();
     }
@@ -818,7 +826,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                     .from(BgReading.class)
                     .where("calculated_value != 0")
                     .where("raw_data != 0")
-            //        .where("timestamp <= ?", JoH.tsl())
+                    //        .where("timestamp <= ?", JoH.tsl())
                     .orderBy("timestamp desc")
                     .limit(number)
                     .execute();
@@ -832,7 +840,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                     .where("Sensor = ? ", sensor.getId())
                     .where("calculated_value != 0")
                     .where("raw_data != 0")
-              //      .where("timestamp <= ?", JoH.tsl())
+                    //      .where("timestamp <= ?", JoH.tsl())
                     .orderBy("timestamp desc")
                     .limit(number)
                     .execute();
@@ -888,7 +896,7 @@ public class BgReading extends Model implements ShareUploadableBg {
     }
 
     public static List<BgReading> latestForGraph(int number, long startTime, long endTime) {
-        return new Select()
+        final List<BgReading> readings = new Select()
                 .from(BgReading.class)
                 .where("timestamp >= " + Math.max(startTime, 0))
                 .where("timestamp <= " + endTime)
@@ -897,6 +905,24 @@ public class BgReading extends Model implements ShareUploadableBg {
                 .orderBy("timestamp desc")
                 .limit(number)
                 .execute();
+
+        return filterInvalidReadings(readings);
+    }
+
+    private static List<BgReading> filterInvalidReadings(final List<BgReading> readings) {
+        // Filter out invalid values
+        if (readings != null) {
+            if (readings.removeIf(r -> {
+                final double v = r.calculated_value;
+                //noinspection ExpressionComparedToItself
+                return v <= 0.0 || v > 1000.0 || (v != v); // check out of range or NaN
+            })) {
+                if (JoH.ratelimit("bgreading-filtered-invalid", 120)) {
+                    Log.wtf(TAG, "Filtered out invalid BG readings");
+                }
+            }
+        }
+        return readings;
     }
 
     public static List<BgReading> latestForGraphSensor(int number, long startTime, long endTime) {
@@ -965,9 +991,37 @@ public class BgReading extends Model implements ShareUploadableBg {
                 .execute();
     }
 
+    public static List<BgReading> latestForGraphAscNewest(int number, long startTime, long endTime) {
+        // If the number of readings in the specified period exceeds the limit, keep the most recent readings.
+        List<BgReading> list = new Select()
+                .from(BgReading.class)
+                .where("timestamp >= " + Math.max(startTime, 0))
+                .where("timestamp <= " + endTime)
+                .where("calculated_value != 0")
+                .where("raw_data != 0")
+                .orderBy("timestamp desc") // get newest first
+                .limit(number)
+                .execute();
+
+        // Restore ascending order for graph logic and remove invalid readings.
+        if (list != null) {
+            Collections.reverse(list);
+            list = filterInvalidReadings(list);
+        }
+
+        return list;
+    }
+
     public static BgReading readingNearTimeStamp(long startTime) {
-        long margin = (4 * 60 * 1000);
-        return readingNearTimeStamp(startTime, margin);
+        if(DexCollectionType.getCurrentSamplePeriod() == 59_000) {
+            long margin = (59 * 1000);
+            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
+            return readingNearTimeStamp(startTime, margin);
+        } else {
+            long margin = (4 * 60 * 1000);
+            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
+            return readingNearTimeStamp(startTime, margin);
+        }
     }
 
     public static BgReading readingNearTimeStamp(long startTime, final long margin) {
@@ -1073,6 +1127,10 @@ public class BgReading extends Model implements ShareUploadableBg {
     }
 
     public BgReading appendSourceInfo(String info) {
+        return appendSourceInfo(info, false);
+    }
+
+    public BgReading appendSourceInfo(String info, final boolean autoSave) {
         if ((source_info == null) || (source_info.length() == 0)) {
             source_info = info;
         } else {
@@ -1081,6 +1139,9 @@ public class BgReading extends Model implements ShareUploadableBg {
             } else {
                 UserError.Log.e(TAG, "Ignoring duplicate source info " + source_info + " -> " + info);
             }
+        }
+        if (autoSave) {
+            save();
         }
         return this;
     }
@@ -1102,8 +1163,8 @@ public class BgReading extends Model implements ShareUploadableBg {
         return bgReadingInsertFromG5(calculated_value, timestamp, null);
     }
 
-                       // TODO can these methods be unified to reduce duplication
-                                                               // TODO remember to sync this with wear code base
+    // TODO can these methods be unified to reduce duplication
+    // TODO remember to sync this with wear code base
     public static synchronized BgReading bgReadingInsertFromG5(double calculated_value, final long timestamp, String sourceInfoAppend) {
 
         final Sensor sensor = Sensor.currentSensor();
@@ -1144,6 +1205,61 @@ public class BgReading extends Model implements ShareUploadableBg {
             return existing;
         }
     }
+
+    public static synchronized BgReading bgReadingInsertFromGluPro(double calculated_value, final long timestamp, String sourceInfoAppend) {
+
+        final Sensor sensor = Sensor.currentSensor();
+        if (sensor == null) {
+            Log.w(TAG, "No sensor, ignoring this bg reading");
+            return null;
+        }
+
+        if (calculated_value == Double.NEGATIVE_INFINITY) {
+            Log.d(TAG, "bgReadingInsertFromGluPro: converting negative infinity to LOW state");
+            calculated_value = 38; // map the value to LOW
+        }
+
+        if (Double.isInfinite(calculated_value) || Double.isNaN(calculated_value)) {
+            Log.e(TAG, "Ignoring invalid bg reading: " + calculated_value);
+            return null;
+        }
+
+        if (calculated_value < 0) {
+            Log.e(TAG, "Ignoring negative bg reading: " + calculated_value);
+            return null;
+        }
+
+        if (calculated_value > 600) {
+            Log.e(TAG, "Ignoring too high bg reading: " + calculated_value);
+            return null;
+        }
+
+        // TODO slope!!
+        final BgReading existing = getForPreciseTimestamp(timestamp, Constants.MINUTE_IN_MS);
+        if (existing == null) {
+            final BgReading bgr = new BgReading();
+            bgr.sensor = sensor;
+            bgr.sensor_uuid = sensor.uuid;
+            bgr.time_since_sensor_started = JoH.msSince(sensor.started_at); // is there a helper for this?
+            bgr.timestamp = timestamp;
+            bgr.uuid = UUID.randomUUID().toString();
+            bgr.calculated_value = calculated_value;
+            bgr.raw_data = SPECIAL_RAW_NOT_AVAILABLE; // placeholder
+
+            if (sourceInfoAppend != null && !sourceInfoAppend.isEmpty()) {
+                bgr.appendSourceInfo(sourceInfoAppend);
+            }
+            bgr.save();
+            if (JoH.ratelimit("sync wakelock", 15)) {
+                final PowerManager.WakeLock linger = JoH.getWakeLock("G5 Insert", 4000);
+            }
+            Inevitable.stackableTask("NotifySyncBgr", 3000, () -> notifyAndSync(bgr));
+            return bgr;
+        } else {
+            return existing;
+        }
+    }
+
 
     public static synchronized BgReading bgReadingInsertMedtrum(double calculated_value, long timestamp, String sourceInfoAppend, double raw_data) {
 
@@ -1245,7 +1361,7 @@ public class BgReading extends Model implements ShareUploadableBg {
 
             }
 
-           return bgReading;
+            return bgReading;
         } else {
             return existing;
         }
@@ -1281,6 +1397,9 @@ public class BgReading extends Model implements ShareUploadableBg {
         return bgReadingInsertFromJson(json, do_notification, WholeHouse.isEnabled());
     }
 
+    private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
+            && Pref.getBooleanDefaultFalse("engineering_mode");
+
     public static BgReading bgReadingInsertFromJson(String json, boolean do_notification, boolean force_sensor) {
         if ((json == null) || (json.length() == 0)) {
             Log.e(TAG, "bgreadinginsertfromjson passed a null or zero length json");
@@ -1290,7 +1409,10 @@ public class BgReading extends Model implements ShareUploadableBg {
         if (bgr != null) {
             try {
                 if (readingNearTimeStamp(bgr.timestamp) == null) {
-                    FixCalibration(bgr);
+//                    if (!libreOneMinuteFollowers)
+//                    {
+//                        FixCalibration(bgr);
+//                    }
                     if (force_sensor) {
                         final Sensor forced_sensor = Sensor.currentSensor();
                         if (forced_sensor != null) {
@@ -1323,12 +1445,16 @@ public class BgReading extends Model implements ShareUploadableBg {
         return bgr;
     }
 
-    // TODO this method shares some code with above.. merge
     public static void bgReadingInsertFromInt(int value, long timestamp, long margin, boolean do_notification) {
+        bgReadingInsertFromInt(value, timestamp, margin, do_notification, "");
+    }
+
+    // TODO this method shares some code with above.. merge
+    public static void bgReadingInsertFromInt(int value, long timestamp, long margin, boolean do_notification, String source_info) {
         // TODO sanity check data!
 
         if ((value <= 0) || (timestamp <= 0)) {
-            Log.e(TAG, "Invalid data fed to InsertFromInt");
+            Log.e(TAG, "Invalid data fed to InsertFromInt " + value + " " + JoH.dateTimeText(timestamp));
             return;
         }
 
@@ -1346,6 +1472,8 @@ public class BgReading extends Model implements ShareUploadableBg {
             bgr.raw_data = value;
             bgr.age_adjusted_raw_value = value;
             bgr.filtered_data = value;
+
+            bgr.source_info = source_info;
 
             final Sensor forced_sensor = Sensor.currentSensor();
             if (forced_sensor != null) {
@@ -1396,7 +1524,7 @@ public class BgReading extends Model implements ShareUploadableBg {
         }
         try {
             Log.d(TAG, "Processing incoming json: " + json);
-           return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(json,BgReading.class);
+            return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(json,BgReading.class);
         } catch (Exception e) {
             Log.d(TAG, "Got exception parsing BgReading json: " + e.toString());
             Home.toaststaticnext("Error on BGReading sync, probably decryption key mismatch");
@@ -1550,7 +1678,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                 .where("timestamp < ?", end_time)
                 .where("timestamp > ?",start_time)
                 .execute();
-       // UserError.Log.d("OB1TEST","Deleted: "+bgrs.size()+" records");
+        // UserError.Log.d("OB1TEST","Deleted: "+bgrs.size()+" records");
     }
 
     public static List<BgReading> cleanup(int retention_days) {
@@ -1655,25 +1783,25 @@ public class BgReading extends Model implements ShareUploadableBg {
         } else if ((last_3 != null) && (last_3.size() == 2)) {
 
             Log.i(TAG, "find_new_curve: Not enough data to calculate parabolic rates - assume Linear");
-                BgReading latest = last_3.get(0);
-                BgReading second_latest = last_3.get(1);
+            BgReading latest = last_3.get(0);
+            BgReading second_latest = last_3.get(1);
 
-                double y2 = latest.calculated_value;
-                double x2 = latest.timestamp;
-                double y1 = second_latest.calculated_value;
-                double x1 = second_latest.timestamp;
+            double y2 = latest.calculated_value;
+            double x2 = latest.timestamp;
+            double y1 = second_latest.calculated_value;
+            double x1 = second_latest.timestamp;
 
-                if(y1 == y2) {
-                    b = 0;
-                } else {
-                    b = (y2 - y1)/(x2 - x1);
-                }
-                a = 0;
-                c = -1 * ((latest.b * x1) - y1);
+            if(y1 == y2) {
+                b = 0;
+            } else {
+                b = (y2 - y1)/(x2 - x1);
+            }
+            a = 0;
+            c = -1 * ((latest.b * x1) - y1);
 
             Log.i(TAG, ""+latest.a+"x^2 + "+latest.b+"x + "+latest.c);
-                save();
-            } else {
+            save();
+        } else {
             Log.i(TAG, "find_new_curve: Not enough data to calculate parabolic rates - assume static data");
             a = 0;
             b = 0;
@@ -1834,10 +1962,8 @@ public class BgReading extends Model implements ShareUploadableBg {
             final long since = now - last.get(0).timestamp;
             // only process if last reading <10 mins
             if (since < 600000) {
-                // check if exceeding high
-                if (last.get(0).calculated_value >
-                        Home.convertToMgDlIfMmol(
-                                JoH.tolerantParseDouble(Pref.getString("highValue", "170")))) {
+                // check if exceeding persistent high threshold
+                if (last.get(0).calculated_value > persistentHighThreshold) {
 
                     final double this_slope = last.get(0).calculated_value_slope * 60000;
                     //Log.d(TAG, "CheckForPersistentHigh: Slope: " + JoH.qs(this_slope));
@@ -1879,7 +2005,7 @@ public class BgReading extends Model implements ShareUploadableBg {
                     if (Pref.getLong(PERSISTENT_HIGH_SINCE,0)!=0)
                     {
                         Log.i(TAG,"Cancelling previous persistent high as we are no longer high");
-                     Pref.setLong(PERSISTENT_HIGH_SINCE, 0); // clear it
+                        Pref.setLong(PERSISTENT_HIGH_SINCE, 0); // clear it
                         Notifications.persistentHighAlert(xdrip.getAppContext(), false, ""); // cancel it
                     }
                 }
@@ -2028,7 +2154,7 @@ public class BgReading extends Model implements ShareUploadableBg {
      * either we have gone in 10 in the last two readings, or we have gone in 3 in the last reading, we
      * don't play the alert again, but rather wait for the alert to finish.
      *  I'll start with having the same values for the high alerts.
-    */
+     */
 
     public static boolean trendingToAlertEnd(Context context, boolean above) {
         // TODO: check if we are not in an UnclerTime.
@@ -2044,14 +2170,14 @@ public class BgReading extends Model implements ShareUploadableBg {
         if(above == false) {
             // This is a low alert, we should be going up
             if((latest.get(0).calculated_value - latest.get(1).calculated_value > 4) ||
-               (latest.get(0).calculated_value - latest.get(2).calculated_value > 10)) {
+                    (latest.get(0).calculated_value - latest.get(2).calculated_value > 10)) {
                 Log.d(TAG_ALERT, "trendingToAlertEnd returning true for low alert");
                 return true;
             }
         } else {
             // This is a high alert we should be heading down
             if((latest.get(1).calculated_value - latest.get(0).calculated_value > 1) ||
-               (latest.get(2).calculated_value - latest.get(0).calculated_value > 2)) {
+                    (latest.get(2).calculated_value - latest.get(0).calculated_value > 2)) {
                 Log.d(TAG_ALERT, "trendingToAlertEnd returning true for high alert");
                 return true;
             }
@@ -2147,7 +2273,7 @@ public class BgReading extends Model implements ShareUploadableBg {
     public static Long getTimeSinceLastReading() {
         BgReading bgReading = BgReading.last();
         if (bgReading != null) {
-            return (new Date().getTime() - bgReading.timestamp);
+            return (new Date().getTime() - bgReading.timestamp); // TODO should be tsl
         }
         return (long) 0;
     }

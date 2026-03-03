@@ -55,13 +55,15 @@ public class Constants {
     public static final int WEBFOLLOW_SERVICE_FAILOVER_ID = 1028;
     public static final int BACKUP_ACTIVITY_ID = 1029;
     public static final int CARELINK_SERVICE_FAILOVER_ID = 1030;
+    public static final int GLUPRO_SERVICE_FAILOVER_ID = 1031;
 
     static final int NIGHTSCOUT_ERROR_NOTIFICATION_ID = 2001;
     public static final int HEALTH_CONNECT_RESPONSE_ID = 2002;
     public static final int ZXING_CAM_REQ_CODE = 49374;
     public static final int ZXING_FILE_REQ_CODE = 49375; // This is created by just incrementing the existing camera scan code from the zxing package
     public static final int SENSORY_EXPIRY_NOTIFICATION_ID = 2003;
-
+    public static final int OUT_OF_RANGE_GLUCOSE_ENTRY_ID = 2004; // Preference setting out of range
+    public static final int XDRIP_UPDATE_NOTIFICATION_ID = 2005;
 
     // increments from this start number
     public static final int INCOMPATIBLE_BASE_ID = 5000;
@@ -78,5 +80,6 @@ public class Constants {
     public static final int LIBREPRO_HEADER1_SIZE = 40;
     public static final int LIBREPRO_HEADER2_SIZE = 32;
     public static final int LIBREPRO_HEADER3_SIZE = 104;
+    public static final int MAX_READINGS_PER_HOUR = 60; // Upper bound on readings per hour xDrip may receive
 
 }

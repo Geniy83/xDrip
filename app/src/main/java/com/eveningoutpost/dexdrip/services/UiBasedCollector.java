@@ -58,8 +58,11 @@ public class UiBasedCollector extends NotificationListenerService {
     private static final String UI_BASED_STORE_LAST_VALUE = "UI_BASED_STORE_LAST_VALUE";
     private static final String UI_BASED_STORE_LAST_REPEAT = "UI_BASED_STORE_LAST_REPEAT";
     private static final String COMPANION_APP_IOB_ENABLED_PREFERENCE_KEY = "fetch_iob_from_companion_app";
+    // Хранилище для значения IOB (Insulin On Board) от компаньон-приложений
+    // Использует Persist.DoubleTimeout для автоматического очищения данных через 5 минут
+    // Ключ: "COMPANION_APP_IOB_VALUE", таймаут: 5 минут (Constants.MINUTE_IN_MS * 5)
     private static final Persist.DoubleTimeout iob_store =
-            new Persist.DoubleTimeout("COMPANION_APP_IOB_VALUE", Constants.MINUTE_IN_MS * 5);
+            new Persist.DoubleTimeout("COMPANION_APP_IOB_VALUE", Constants.MINUTE_IN_MS * 1);
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
     private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
 
@@ -67,7 +70,7 @@ public class UiBasedCollector extends NotificationListenerService {
     private static final HashSet<String> coOptedPackagesAll = new HashSet<>();
     private static final HashSet<String> companionAppIoBPackages = new HashSet<>();
     private static final HashSet<Pattern> companionAppIoBRegexes = new HashSet<>();
-    private static boolean debug = false;
+    private static boolean debug = true;
 
     @VisibleForTesting
     String lastPackage;
@@ -75,7 +78,16 @@ public class UiBasedCollector extends NotificationListenerService {
     static {
         coOptedPackages.add("com.dexcom.g6");
         coOptedPackages.add("com.dexcom.g6.region1.mmol");
+        coOptedPackages.add("com.dexcom.g6.region2.mgdl");
         coOptedPackages.add("com.dexcom.g6.region3.mgdl");
+        coOptedPackages.add("com.dexcom.g6.region4.mmol");
+        coOptedPackages.add("com.dexcom.g6.region5.mmol");
+        coOptedPackages.add("com.dexcom.g6.region6.mgdl");
+        coOptedPackages.add("com.dexcom.g6.region7.mmol");
+        coOptedPackages.add("com.dexcom.g6.region8.mmol");
+        coOptedPackages.add("com.dexcom.g6.region9.mgdl");
+        coOptedPackages.add("com.dexcom.g6.region10.mgdl");
+        coOptedPackages.add("com.dexcom.g6.region11.mmol");
         coOptedPackages.add("com.dexcom.dexcomone");
         coOptedPackages.add("com.dexcom.stelo");
         coOptedPackages.add("com.dexcom.g7");
@@ -84,6 +96,7 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackages.add("com.camdiab.fx_alert.mgdl");
         coOptedPackages.add("com.camdiab.fx_alert.hx.mmoll");
         coOptedPackages.add("com.camdiab.fx_alert.hx.mgdl");
+        coOptedPackages.add("com.camdiab.fx_alert.mmoll.ca");
         coOptedPackages.add("com.medtronic.diabetes.guardian");
         coOptedPackages.add("com.medtronic.diabetes.guardianconnect");
         coOptedPackages.add("com.medtronic.diabetes.guardianconnect.us");
@@ -92,7 +105,17 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackages.add("com.medtronic.diabetes.simplera.eu");
         coOptedPackages.add("com.senseonics.gen12androidapp");
         coOptedPackages.add("com.senseonics.androidapp");
-        coOptedPackages.add("com.microtech.aidexx.mgdl"); // Experiment
+        coOptedPackages.add("com.microtech.aidexx.mgdl");
+        coOptedPackages.add("com.ottai.seas");
+        coOptedPackages.add("com.microtech.aidexx"); //for microtech china version
+        coOptedPackages.add("com.ottai.tag"); // //for ottai china version
+        coOptedPackages.add("com.senseonics.eversense365.us");
+        coOptedPackages.add("com.kakaohealthcare.pasta"); // A Health app for sensors that we already collect from
+        coOptedPackages.add("com.sinocare.cgm.ce");
+        coOptedPackages.add("com.sinocare.ican.health.ce");
+        coOptedPackages.add("com.sinocare.ican.health.ru");
+        coOptedPackages.add("com.soniejka.blueberry_app");
+        coOptedPackages.add("com.anytime.rus");
 
         coOptedPackagesAll.add("com.dexcom.dexcomone");
         coOptedPackagesAll.add("com.dexcom.d1plus");
@@ -101,7 +124,17 @@ public class UiBasedCollector extends NotificationListenerService {
         coOptedPackagesAll.add("com.medtronic.diabetes.simplera.eu");
         coOptedPackagesAll.add("com.senseonics.gen12androidapp");
         coOptedPackagesAll.add("com.senseonics.androidapp");
-        coOptedPackagesAll.add("com.microtech.aidexx.mgdl"); // Experiment
+        coOptedPackagesAll.add("com.microtech.aidexx.mgdl");
+        coOptedPackagesAll.add("com.ottai.seas");
+        coOptedPackagesAll.add("com.microtech.aidexx"); //for microtech china version
+        coOptedPackagesAll.add("com.ottai.tag"); // //for ottai china version
+        coOptedPackagesAll.add("com.senseonics.eversense365.us");
+        coOptedPackagesAll.add("com.kakaohealthcare.pasta"); // Experiment
+        coOptedPackagesAll.add("com.sinocare.cgm.ce");
+        coOptedPackagesAll.add("com.sinocare.ican.health.ce");
+        coOptedPackagesAll.add("com.sinocare.ican.health.ru");
+        coOptedPackagesAll.add("com.soniejka.blueberry_app");
+        coOptedPackagesAll.add("com.anytime.rus");
 
         companionAppIoBPackages.add("com.insulet.myblue.pdm");
 
@@ -235,6 +268,12 @@ public class UiBasedCollector extends NotificationListenerService {
     String filterString(final String value) {
         if (lastPackage == null) return value;
         switch (lastPackage) {
+            case "com.soniejka.blueberry_app":
+                // Для Blueberry App: "Глюкоза: 9,7 →" → "9,7"
+                return basicFilterString(arrowFilterString(value))
+                        .replace("Глюкоза:", "")
+                        .replace("Glucose:", "")
+                        .trim();
             default:
                 return (basicFilterString(arrowFilterString(value)))
                         .trim();
@@ -355,13 +394,13 @@ public class UiBasedCollector extends NotificationListenerService {
                 } else {
                     UserError.Log.d(TAG, "Inserting new value");
                     PersistentStore.setLong(UI_BASED_STORE_LAST_VALUE, mgdl);
-                    val bgr = BgReading.bgReadingInsertFromG5(mgdl, timestamp);
-                    if (bgr != null) {
-                        bgr.find_slope();
-                        bgr.noRawWillBeAvailable();
-                        bgr.injectDisplayGlucose(BestGlucose.getDisplayGlucose());
-                        return true;
-                    }
+                    val bgr = BgReading.bgReadingInsertLibre2(mgdl, timestamp, mgdl);
+//                    if (bgr != null) {
+//                        bgr.find_slope();
+//                        bgr.noRawWillBeAvailable();
+//                        bgr.injectDisplayGlucose(BestGlucose.getDisplayGlucose());
+//                        return true;
+//                    }
                 }
             } else {
                 UserError.Log.d(TAG, "Duplicate value: " + existing.timeStamp());

@@ -8,6 +8,7 @@ package com.eveningoutpost.dexdrip;
 
 import static com.eveningoutpost.dexdrip.Home.startWatchUpdaterService;
 import static com.eveningoutpost.dexdrip.utils.DexCollectionType.DexcomG5;
+import static com.eveningoutpost.dexdrip.utils.DexCollectionType.GluPro;
 import static com.eveningoutpost.dexdrip.utils.DexCollectionType.Medtrum;
 import static com.eveningoutpost.dexdrip.utils.DexCollectionType.NSFollow;
 import static com.eveningoutpost.dexdrip.utils.DexCollectionType.PoctechCT14;
@@ -39,10 +40,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.eveningoutpost.dexdrip.cgm.glupro.GluProService;
 import com.eveningoutpost.dexdrip.models.DesertSync;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.RollCall;
@@ -137,10 +140,13 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
     private static final String SHARE_FOLLOW = "Dex Share Follow";
     private static final String WEB_FOLLOW = "Web Follower";
     private static final String CARELINK_FOLLOW = "CareLink Follow";
+    public static final String GLU_PRO = "Smart Guide";
     private static final String XDRIP_LIBRE2 = "Libre2";
+
 
     static {
         sectionAlwaysOn.add(G5_STATUS);
+        sectionAlwaysOn.add(GLU_PRO);
     }
 
     public static PendingIntent getStatusPendingIntent(String section_name) {
@@ -172,16 +178,12 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
                 addAsection(G4_STATUS, "Bluetooth Collector Status");
             }
             if (dexCollectionType.equals(DexcomG5)) {
-                if (Pref.getBooleanDefaultFalse(Ob1G5CollectionService.OB1G5_PREFS)) {
-                    addAsection(G5_STATUS, "G6/Dex1/G7/1+ Collector/Transmitter Status");
-                } else {
-                    addAsection(G5_STATUS, "G5 Collector and Transmitter Status");
-                }
+                addAsection(G5_STATUS, "Dex Collector/Transmitter Status");
             } else if (dexCollectionType.equals(Medtrum)) {
                 addAsection(MEDTRUM_STATUS, "Medtrum A6 Status");
             }
-            if (dexCollectionType.equals(PoctechCT14)) {
-                addAsection(PoctechCT14_STATUS, "PoctechCT14 Collector and Transmitter Status");
+            if (dexCollectionType.equals(GluPro)) {
+                addAsection(GLU_PRO, getString(R.string.glupro_status));
             }
             if (BlueJayEntry.isEnabled()) {
                 addAsection(BLUEJAY_STATUS, "BlueJay Watch Status");
@@ -200,6 +202,7 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
             }
             if (Pref.getBooleanDefaultFalse("cloud_storage_mongodb_enable")
                     || Pref.getBooleanDefaultFalse("cloud_storage_api_enable")
+                    || Pref.getBooleanDefaultFalse("cloud_storage_tidepool_enable")
                     || Pref.getBooleanDefaultFalse("share_upload")
                     || (Pref.getBooleanDefaultFalse("wear_sync") && Home.get_engineering_mode())) {
                 addAsection(UPLOADERS, "Cloud Uploader Queues");
@@ -289,6 +292,9 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
                 break;
             case CARELINK_FOLLOW:
                 la.addRows(CareLinkFollowService.megaStatus());
+                break;
+            case GLU_PRO:
+                la.addRows(GluProService.megaStatus());
                 break;
             case XDRIP_LIBRE2:
                 la.addRows(LibreReceiver.megaStatus());
@@ -632,6 +638,7 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
         TextView name;
         TextView value;
         TextView spacer;
+        Button button;
         LinearLayout layout;
     }
 
@@ -691,6 +698,7 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
                 viewHolder = new ViewHolder();
                 view = mInflator.inflate(R.layout.listitem_megastatus, null);
                 viewHolder.value = (TextView) view.findViewById(R.id.value);
+                viewHolder.button = (Button) view.findViewById(R.id.button);
                 viewHolder.name = (TextView) view.findViewById(R.id.name);
                 viewHolder.spacer = (TextView) view.findViewById(R.id.spacer);
                 viewHolder.layout = (LinearLayout) view.findViewById(R.id.device_list_id);
@@ -710,6 +718,7 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
                 viewHolder.spacer.setVisibility(View.VISIBLE);
                 viewHolder.name.setVisibility(View.VISIBLE);
                 viewHolder.value.setVisibility(View.VISIBLE);
+                viewHolder.button.setVisibility(View.GONE);
                 viewHolder.name.setTextColor(color_store1);
                 viewHolder.layout.setPadding(padding_store_left_1, padding_store_top_1, padding_store_right_1, padding_store_bottom_1);
                 viewHolder.name.setGravity(gravity_store_1);
@@ -757,17 +766,38 @@ public class MegaStatus extends FloatingLocaleActivityWithScreenshot {
                             return true;
                         }
                     });*/
-                    view.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+                    view.setOnClickListener(v -> {
+                        try {
+                            runOnUiThread(row.runnable);
+                        } catch (Exception e) {
+                            //
+                        }
+
+                    });
+
+                } else if ((row.runnable != null) && (row.button_name != null) && (row.button_name.equals("button-press"))) {
+                        runnableView = view; // last one
+                        viewHolder.button.setText(row.value);
+                        viewHolder.value.setVisibility(View.GONE);
+                        viewHolder.button.setVisibility(View.VISIBLE);
+                        viewHolder.button.setOnClickListener(v -> {
+                            try {
+                                runOnUiThread(row.runnable);
+                            } catch (Exception e) {
+                                //
+                            }
+                        });
+
+                        view.setOnClickListener(v -> {
                             try {
                                 runOnUiThread(row.runnable);
                             } catch (Exception e) {
                                 //
                             }
 
-                        }
-                    });
+                        });
+
+
                 } else {
                     view.setLongClickable(false);
                 }
