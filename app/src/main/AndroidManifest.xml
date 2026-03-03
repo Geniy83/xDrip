@@ -645,9 +645,9 @@
                 <action android:name="com.eveningoutpost.dexdrip.action.DashX" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".AnytimeCT3AppReceiver">
+        <receiver android:name=".AnytimeAppReceiver">
             <intent-filter>
-                <action android:name="com.eveningoutpost.dexdrip.action.AnytimeCT3" />
+                <action android:name="com.eveningoutpost.dexdrip.action.Anytime" />
             </intent-filter>
         </receiver>
         <receiver android:name=".SyaiAppReceiver">

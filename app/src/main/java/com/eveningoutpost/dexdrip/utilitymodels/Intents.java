@@ -105,6 +105,6 @@ public interface Intents {
     String OTTAI_CN_APP = "com.eveningoutpost.dexdrip.OT_APP";
     String SYAI_TAG_APP = "com.eveningoutpost.dexdrip.NS_EMULATOR";
     String DashX = "com.eveningoutpost.dexdrip.action.DashX";
-    String AnytimeCT3 = "com.eveningoutpost.dexdrip.action.AnytimeCT3";
+    String Anytime = "com.eveningoutpost.dexdrip.action.Anytime";
 
 }
