@@ -1153,7 +1153,10 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             bindPreferenceSummaryToValue(findPreference("persistent_high_threshold_mins"));
             bindPreferenceSummaryToValue(findPreference("persistent_high_repeat_mins"));
 
-            bindPreferenceTitleAppendToValueUpdateChannel(findPreference("update_channel"));
+            Preference updateChannelPref = findPreference("update_channel");
+            if (updateChannelPref != null) {
+                bindPreferenceTitleAppendToValueUpdateChannel(updateChannelPref);
+            }
 
 
 
@@ -2153,8 +2156,8 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                 Log.wtf(TAG, "Got null pointer exception removing pref: ", e);
             }
 
-            if (engineering_mode || this.prefs.getString("update_channel", "").matches("alpha|nightly")) {
-                ListPreference update_channel = (ListPreference) findPreference("update_channel");
+            ListPreference update_channel = (ListPreference) findPreference("update_channel");
+            if (update_channel != null && (engineering_mode || this.prefs.getString("update_channel", "").matches("alpha|nightly"))) {
                 update_channel.setEntryValues(getResources().getStringArray(R.array.UpdateChannelE));
                 update_channel.setEntries(getResources().getStringArray(R.array.UpdateChannelDetailE));
             }

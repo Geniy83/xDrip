@@ -424,8 +424,8 @@
     <string name="settings_on_external_storage">Load/Save settings</string>
     <string name="get_notified_of_new_apk_releases">Get notified of new apk releases</string>
     <string name="choose_stable_beta_or_alpha_releases">Choose Stable, Beta or Alpha releases</string>
-    <string name="update_from_github_title">Check for updates from GitHub</string>
-    <string name="update_from_github_summary">Use GitHub Releases (e.g. Geniy83/xDrip) instead of built-in update servers. Version is read from release tag or APK filename (8-digit yyyyMMdd).</string>
+    <string name="update_from_github_title">Get updates from GitHub Geniy83/xDrip</string>
+    <string name="update_from_github_summary"></string>
     <string name="github_update_repo_title">GitHub repository</string>
     <string name="github_update_repo_summary">Owner/repo, e.g. Geniy83/xDrip. Leave default for this build.</string>
     <string name="web_feedback_form_for_sending_messages">Web feedback form for sending messages and ratings of xDrip+ to the developers</string>

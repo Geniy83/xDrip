@@ -1153,25 +1153,11 @@
             android:switchTextOff="@string/short_off_text_for_switches"
             android:switchTextOn="@string/short_on_text_for_switches"
             android:title="@string/automatic_update_check" />
-        <ListPreference
-            android:defaultValue="beta"
-            android:entries="@array/UpdateChannelDetail"
-            android:entryValues="@array/UpdateChannel"
-            android:key="update_channel"
-            android:shouldDisableView="true"
-            android:summary="@string/choose_stable_beta_or_alpha_releases"
-            android:title="@string/update_channel" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="update_from_github"
             android:summary="@string/update_from_github_summary"
             android:title="@string/update_from_github_title" />
-        <EditTextPreference
-            android:defaultValue="Geniy83/xDrip"
-            android:dependency="update_from_github"
-            android:key="github_update_repo"
-            android:summary="@string/github_update_repo_summary"
-            android:title="@string/github_update_repo_title" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="enable_crashlytics"
@@ -1183,15 +1169,6 @@
             android:key="enable_telemetry"
             android:summary="@string/send_data_to_developers"
             android:title="@string/enable_telemetry" />
-        <Preference
-            android:key="send_feedback"
-            android:summary="@string/web_feedback_form_for_sending_messages"
-            android:title="@string/send_feedback_message">
-            <intent
-                android:action="xdrip_plus_send_developer_feedback"
-                android:targetClass="com.eveningoutpost.dexdrip.utilitymodels.SendFeedBack"
-                android:targetPackage="@string/local_target_package" />
-        </Preference>
     </PreferenceScreen>
 
     <PreferenceCategory

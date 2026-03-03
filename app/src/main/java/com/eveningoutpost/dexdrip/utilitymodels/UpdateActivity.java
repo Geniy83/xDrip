@@ -103,8 +103,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
             last_check_time = prefs.getLong(last_update_check_time, 0);
 
         final boolean fromGitHub = prefs.getBoolean(PREF_UPDATE_FROM_GITHUB, false);
-        String channel = prefs.getString("update_channel", "beta");
-        long checkFrequency = channel.equals("beta") ? (86300_000 * 3) : (86300_000 * 2);
+        long checkFrequency = 86300_000 * 3; // 3 days
         if (((JoH.tsl() - last_check_time) > checkFrequency) || (debug)) {
             last_check_time = JoH.tsl();
             prefs.edit().putLong(last_update_check_time, last_check_time).apply();
@@ -120,6 +119,8 @@ public class UpdateActivity extends BaseAppCompatActivity {
                 return;
             }
 
+            // Fixed channel for built-in update server URL (this build uses GitHub only)
+            final String channel = "beta";
             Log.i(TAG, "Checking for a software update, channel: " + channel);
             String subversion = "";
             if (!context.getString(R.string.app_name).equals("xDrip+")) {
@@ -234,7 +235,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
                         .writeTimeout(20, TimeUnit.SECONDS))
                         .build();
             }
-            String repo = prefs.getString(PREF_GITHUB_UPDATE_REPO, DEFAULT_GITHUB_REPO).trim();
+            String repo = DEFAULT_GITHUB_REPO;
             if (repo.isEmpty()) repo = DEFAULT_GITHUB_REPO;
             repo = repo.replaceAll("^https?://github\\.com/", "").replaceAll("/?$", "");
             final String apiUrl = "https://api.github.com/repos/" + repo + "/releases/latest";
@@ -308,12 +309,12 @@ public class UpdateActivity extends BaseAppCompatActivity {
             } else {
                 Log.i(TAG, "GitHub: current is up to date " + currentForCompare + " vs " + parsedVersion);
                 if (fromUi) {
-                    JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                    JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date) + " (" + parsedVersion + " \u2264 " + currentForCompare + ")");
                 }
             }
         } catch (Exception e) {
             UserError.Log.e(TAG, "GitHub update check failed: " + e.getMessage());
-            if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+            if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date) + ": " + e.getMessage());
         } finally {
             httpClient = null;
         }
@@ -396,11 +397,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
         TextView detail = (TextView) findViewById(R.id.updatedetail);
         detail.setText(getString(R.string.new_version_date_colon) + Integer.toString(newversion) + "\n" + getString(R.string.old_version_date_colon) + Integer.toString(versionnumber));
         TextView channel = (TextView) findViewById(R.id.update_channel);
-        if (prefs.getBoolean(PREF_UPDATE_FROM_GITHUB, false)) {
-            channel.setText(getString(R.string.update_channel_colon_space) + "GitHub (" + prefs.getString(PREF_GITHUB_UPDATE_REPO, DEFAULT_GITHUB_REPO) + ")");
-        } else {
-            channel.setText(getString(R.string.update_channel_colon_space) + JoH.ucFirst(prefs.getString("update_channel", "beta")));
-        }
+        channel.setText(getString(R.string.update_channel_colon_space) + "GitHub (" + DEFAULT_GITHUB_REPO + ")");
 
         updateMessageText.setText(MESSAGE);
     }
@@ -478,12 +475,12 @@ public class UpdateActivity extends BaseAppCompatActivity {
 
     // TODO WebAppHelper could/should implement these features too or we could use the download manager
     private class AsyncDownloader extends AsyncTask<Void, Long, Boolean> {
-        private final String URL = DOWNLOAD_URL + "&rr=" + JoH.tsl();
+        private final String URL = DOWNLOAD_URL + (DOWNLOAD_URL.contains("?") ? "&" : "?") + "rr=" + JoH.tsl();
 
         private final OkHttpClient.Builder okbuilder = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
                 .followRedirects(true)
                 .followSslRedirects(true);
 
@@ -494,8 +491,9 @@ public class UpdateActivity extends BaseAppCompatActivity {
         protected Boolean doInBackground(Void... params) {
 
             final Request request = new Request.Builder()
-                    .header("User-Agent", "Mozilla/5.0 (jamorham)")
-                    .header("Accept-Encoding", "")
+                    .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; xDrip) AppleWebKit/537.36")
+                    .header("Accept", "*/*")
+                    .header("Accept-Encoding", "identity")
                     .header("Connection", "close")
                     .url(URL)
                     .build();
@@ -564,7 +562,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
                         }
                         if (messageDigest != null)
                             lastDigest = JoH.bytesToHex(messageDigest.digest()).toLowerCase();
-                        return downloaded == target;
+                        return (target < 0) ? (downloaded > 0) : (downloaded == target);
 
                     } catch (IOException e) {
                         Log.e(TAG, "Download error: " + e.toString());
