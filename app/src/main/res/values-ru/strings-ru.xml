@@ -1713,7 +1713,7 @@
     <string name="libre_filter_length_title">Сглаживать данные libre (patched app)</string>
     <string name="smoothing_filter_dashx_title">Сглаживать данные DashX</string>
     <string name="smoothing_filter_ottai_title">Сглаживать данные Ottai</string>
-    <string name="smoothing_filter_anytime_title">Сглаживать данные Anytime</string>
+    <string name="smoothing_filter_anytimect3_title">Сглаживать данные AnytimeCT3</string>
     <string name="smoothing_filter_interapp_summary">Взвешенное среднее за выбранное число минут (как у Libre patched app). 0 = без сглаживания.</string>
     <string name="enable_streaming_dialog_yes">Подключиться к этому сенсору Libre2</string>
     <string name="enable_streaming_dialog_no">Не подключаться к этому сенсору Libre2</string>

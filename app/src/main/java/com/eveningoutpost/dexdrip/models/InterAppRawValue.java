@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stores raw glucose readings from inter-app data sources (DashX, Ottai, Anytime, etc.)
+ * Stores raw glucose readings from inter-app data sources (DashX, Ottai, AnytimeCT3, etc.)
  * for use by the universal smoothing algorithm. Each source has its own stream of points.
  */
 @Table(name = "InterAppRawValue", id = BaseColumns._ID)

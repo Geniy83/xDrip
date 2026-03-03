@@ -36,7 +36,6 @@
         <item>WifiBlueToothWixel</item>
         <item>WifiDexbridgeWixel</item>
         <item>DexcomG5</item>
-        <item>PoctechCT14</item>
         <item>LimiTTer</item>
         <item>LimiTTerWifi</item>
         <item>LibreWifi</item>
@@ -47,6 +46,7 @@
         <item>NSEmulator</item>
         <item>OttaiAppReceiver</item>
         <item>SyaiAppReceiver</item>
+        <item>AnytimeAppReceiver</item>
         <item>Medtrum</item>
         <item>NSFollower</item>
         <item>SHFollower</item>

@@ -35,7 +35,7 @@ public class AnytimeAppReceiver extends BroadcastReceiver {
                 synchronized (lock) {
                     try {
 
-                        UserError.Log.d(TAG, "Anytime onReceiver: " + intent.getAction());
+                        UserError.Log.d(TAG, "anytime onReceiver: " + intent.getAction());
                         JoH.benchmark(null);
                         if (prefs == null)
                             prefs = PreferenceManager.getDefaultSharedPreferences(context);

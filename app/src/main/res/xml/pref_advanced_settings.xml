@@ -1052,9 +1052,9 @@
                 android:defaultValue="0"
                 android:entries="@array/libreFilterLengthMethods"
                 android:entryValues="@array/libreFilterLengthValues"
-                android:key="smoothing_filter_length_anytime"
+                android:key="smoothing_filter_length_anytimect3"
                 android:summary="@string/smoothing_filter_interapp_summary"
-                android:title="@string/smoothing_filter_anytime_title" />
+                android:title="@string/smoothing_filter_anytimect3_title" />
             <SwitchPreference
                 android:defaultValue="false"
                 android:key="xdrip_webservice"

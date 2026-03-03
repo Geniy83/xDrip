@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Universal weighted-average smoothing for glucose data sources.
  * Same algorithm as Libre (patched app): weight = 1 - (now - timestamp) / duration;
- * used for DashX, Ottai, Anytime and other inter-app sources.
+ * used for DashX, Ottai, AnytimeCT3 and other inter-app sources.
  */
 public final class GlucoseSmoother {
 
@@ -20,7 +20,7 @@ public final class GlucoseSmoother {
     public static final String SOURCE_DASHX = "dashx";
     /** Source id for Ottai. Pref key: smoothing_filter_length_ottai */
     public static final String SOURCE_OTTAI = "ottai";
-    /** Source id for Anytime. Pref key: smoothing_filter_length_anytime */
+    /** Source id for AnytimeCT3. Pref key: smoothing_filter_length_anytimect3 */
     public static final String SOURCE_ANYTIME = "anytime";
 
     private static final String PREF_KEY_PREFIX = "smoothing_filter_length_";
@@ -74,12 +74,12 @@ public final class GlucoseSmoother {
     }
 
     /**
-     * For inter-app sources (DashX, Ottai, Anytime): saves the reading, then returns
+     * For inter-app sources (DashX, Ottai, AnytimeCT3): saves the reading, then returns
      * either the raw value (if smoothing is 0) or the weighted-average smoothed value
      * over the configured window. Use this value for BgReading insert.
      *
      * @param context  app context (for Pref if needed)
-     * @param sourceId one of SOURCE_DASHX, SOURCE_OTTAI, SOURCE_ANYTIME or any string (pref key = smoothing_filter_length_&lt;sourceId&gt;)
+     * @param sourceId one of SOURCE_DASHX, SOURCE_OTTAI, SOURCE_ANYTIMECT3 or any string (pref key = smoothing_filter_length_&lt;sourceId&gt;)
      * @param timestamp reading time in ms
      * @param glucose   value in mg/dL
      * @return value to insert (smoothed or raw)
