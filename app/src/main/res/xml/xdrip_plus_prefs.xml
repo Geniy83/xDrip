@@ -1162,6 +1162,17 @@
             android:summary="@string/choose_stable_beta_or_alpha_releases"
             android:title="@string/update_channel" />
         <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="update_from_github"
+            android:summary="@string/update_from_github_summary"
+            android:title="@string/update_from_github_title" />
+        <EditTextPreference
+            android:defaultValue="Geniy83/xDrip"
+            android:dependency="update_from_github"
+            android:key="github_update_repo"
+            android:summary="@string/github_update_repo_summary"
+            android:title="@string/github_update_repo_title" />
+        <CheckBoxPreference
             android:defaultValue="true"
             android:key="enable_crashlytics"
             android:summary="@string/send_crash_errors_to_developer"

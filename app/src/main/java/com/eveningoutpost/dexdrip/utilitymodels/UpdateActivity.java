@@ -42,6 +42,9 @@ import java.net.SocketTimeoutException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -87,19 +90,37 @@ public class UpdateActivity extends BaseAppCompatActivity {
         checkForAnUpdate(context, false);
     }
 
+    /** Preference: check for updates from GitHub Releases instead of built-in servers */
+    public static final String PREF_UPDATE_FROM_GITHUB = "update_from_github";
+    /** Preference: GitHub repo in form owner/repo (e.g. Geniy83/xDrip) */
+    public static final String PREF_GITHUB_UPDATE_REPO = "github_update_repo";
+    public static final String DEFAULT_GITHUB_REPO = "Geniy83/xDrip";
+
     public static void checkForAnUpdate(final Context context, final boolean fromUi) {
         if (prefs == null) prefs = PreferenceManager.getDefaultSharedPreferences(context);
         if ((last_check_time != -1) && (!prefs.getBoolean(AUTO_UPDATE_PREFS_NAME, true))) return;
-        String channel = prefs.getString("update_channel", "beta");
         if (last_check_time == 0)
             last_check_time = prefs.getLong(last_update_check_time, 0);
+
+        final boolean fromGitHub = prefs.getBoolean(PREF_UPDATE_FROM_GITHUB, false);
+        String channel = prefs.getString("update_channel", "beta");
         long checkFrequency = channel.equals("beta") ? (86300_000 * 3) : (86300_000 * 2);
         if (((JoH.tsl() - last_check_time) > checkFrequency) || (debug)) {
             last_check_time = JoH.tsl();
             prefs.edit().putLong(last_update_check_time, last_check_time).apply();
 
-            Log.i(TAG, "Checking for a software update, channel: " + channel);
+            DOWNLOAD_URL = "";
+            newversion = 0;
+            getVersionInformation(context);
+            if (versionnumber == 0) return;
 
+            if (fromGitHub) {
+                Log.i(TAG, "Checking for update from GitHub Releases");
+                new Thread(() -> checkForUpdateFromGitHub(context, fromUi)).start();
+                return;
+            }
+
+            Log.i(TAG, "Checking for a software update, channel: " + channel);
             String subversion = "";
             if (!context.getString(R.string.app_name).equals("xDrip+")) {
                 subversion = context.getString(R.string.app_name).replaceAll("[^a-zA-Z0-9]", "");
@@ -107,8 +128,6 @@ public class UpdateActivity extends BaseAppCompatActivity {
             }
 
             final String CHECK_URL = context.getString((incrementLong(UP_LOAD_BALANCER) % 2 == 1) ? R.string.qserviceurl : R.string.wserviceurl) + "/update-check/" + channel + subversion;
-            DOWNLOAD_URL = "";
-            newversion = 0;
 
             new Thread(() -> {
                 try {
@@ -119,8 +138,6 @@ public class UpdateActivity extends BaseAppCompatActivity {
                                 .writeTimeout(20, TimeUnit.SECONDS))
                                 .build();
                     }
-                    getVersionInformation(context);
-                    if (versionnumber == 0) return;
 
                     String locale = "";
                     try {
@@ -132,7 +149,6 @@ public class UpdateActivity extends BaseAppCompatActivity {
 
 
                     final Request request = new Request.Builder()
-                            // Mozilla header facilitates compression
                             .header("User-Agent", "Mozilla/5.0")
                             .header("Connection", "close")
                             .url(CHECK_URL + "?r=" + Long.toString((System.currentTimeMillis() / 100000) % 9999999) + "&ln=" + JoH.urlEncode(locale))
@@ -174,7 +190,6 @@ public class UpdateActivity extends BaseAppCompatActivity {
                                         context.startActivity(intent);
 
                                         if (!fromUi) {
-                                            // activate the flag for a notification if this was a background check
                                             PersistentStore.setBoolean(XDRIP_UPDATE_NOTIFICATION_PENDING, true);
                                         }
 
@@ -183,7 +198,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
                                     }
                                 } else {
                                     Log.i(TAG, "Our current version is the most recent: " + versionnumber + " vs " + newversion);
-                                    if (fromUi) { // Only for manual update check
+                                    if (fromUi) {
                                         JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
                                     }
                                 }
@@ -203,6 +218,115 @@ public class UpdateActivity extends BaseAppCompatActivity {
                 httpClient = null; // for GC
             }).start();
         }
+    }
+
+    /**
+     * Fetches latest release from GitHub (https://api.github.com/repos/owner/repo/releases/latest),
+     * finds APK asset, extracts version (8-digit yyyyMMdd from tag or asset name), compares with
+     * current buildVersion. If newer, sets DOWNLOAD_URL etc. and starts UpdateActivity.
+     */
+    private static void checkForUpdateFromGitHub(final Context context, final boolean fromUi) {
+        try {
+            if (httpClient == null) {
+                httpClient = enableTls12OnPreLollipop(new OkHttpClient.Builder()
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(60, TimeUnit.SECONDS)
+                        .writeTimeout(20, TimeUnit.SECONDS))
+                        .build();
+            }
+            String repo = prefs.getString(PREF_GITHUB_UPDATE_REPO, DEFAULT_GITHUB_REPO).trim();
+            if (repo.isEmpty()) repo = DEFAULT_GITHUB_REPO;
+            repo = repo.replaceAll("^https?://github\\.com/", "").replaceAll("/?$", "");
+            final String apiUrl = "https://api.github.com/repos/" + repo + "/releases/latest";
+
+            Request request = new Request.Builder()
+                    .header("User-Agent", "xDrip-Update-Check")
+                    .header("Accept", "application/vnd.github.v3+json")
+                    .url(apiUrl)
+                    .build();
+
+            Response response = httpClient.newCall(request).execute();
+            if (!response.isSuccessful()) {
+                Log.e(TAG, "GitHub API failed: " + response.code());
+                if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                return;
+            }
+
+            String body = response.body().string();
+            JSONObject release = new JSONObject(body);
+            String tagName = release.optString("tag_name", "");
+            String releaseBody = release.optString("body", "");
+            JSONArray assets = release.optJSONArray("assets");
+            if (assets == null || assets.length() == 0) {
+                Log.e(TAG, "GitHub release has no assets");
+                if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                return;
+            }
+
+            String downloadUrl = null;
+            String apkName = null;
+            int assetSize = -1;
+            int parsedVersion = 0;
+
+            for (int i = 0; i < assets.length(); i++) {
+                JSONObject asset = assets.getJSONObject(i);
+                String name = asset.optString("name", "");
+                if (!name.toLowerCase().endsWith(".apk")) continue;
+                downloadUrl = asset.optString("browser_download_url", "");
+                if (downloadUrl.isEmpty()) continue;
+                apkName = name;
+                assetSize = asset.optInt("size", -1);
+                parsedVersion = parseVersionFromTagOrName(tagName, name);
+                break;
+            }
+
+            if (downloadUrl == null || parsedVersion == 0) {
+                Log.e(TAG, "No APK asset or could not parse version in GitHub release");
+                if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                return;
+            }
+
+            int currentForCompare = versionnumber;
+            if (versionnumber >= 100_000_000) {
+                currentForCompare = 20_000_000 + (versionnumber / 100 % 1_000_000);
+            }
+
+            if (parsedVersion > currentForCompare) {
+                Log.i(TAG, "GitHub update available: " + parsedVersion + " > " + currentForCompare);
+                newversion = parsedVersion;
+                DOWNLOAD_URL = downloadUrl;
+                FILE_SIZE = assetSize > 0 ? assetSize : -1;
+                MESSAGE = releaseBody != null ? releaseBody : tagName;
+                CHECKSUM = "";
+
+                Intent intent = new Intent(context, UpdateActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                if (!fromUi) {
+                    PersistentStore.setBoolean(XDRIP_UPDATE_NOTIFICATION_PENDING, true);
+                }
+            } else {
+                Log.i(TAG, "GitHub: current is up to date " + currentForCompare + " vs " + parsedVersion);
+                if (fromUi) {
+                    JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                }
+            }
+        } catch (Exception e) {
+            UserError.Log.e(TAG, "GitHub update check failed: " + e.getMessage());
+            if (fromUi) JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+        } finally {
+            httpClient = null;
+        }
+    }
+
+    /** Extract 8-digit version (yyyyMMdd) from tag (e.g. "20260302") or asset name (e.g. "xDrip+ 20260302 Evgeniy build-prod-release.apk"). */
+    private static int parseVersionFromTagOrName(String tagName, String assetName) {
+        Pattern p = Pattern.compile("(\\d{8})");
+        Matcher m = p.matcher(tagName);
+        if (m.find()) return Integer.parseInt(m.group(1));
+        m = p.matcher(assetName);
+        if (m.find()) return Integer.parseInt(m.group(1));
+        return 0;
     }
 
     public static void forceUpdateCheckNow() {
@@ -272,7 +396,11 @@ public class UpdateActivity extends BaseAppCompatActivity {
         TextView detail = (TextView) findViewById(R.id.updatedetail);
         detail.setText(getString(R.string.new_version_date_colon) + Integer.toString(newversion) + "\n" + getString(R.string.old_version_date_colon) + Integer.toString(versionnumber));
         TextView channel = (TextView) findViewById(R.id.update_channel);
-        channel.setText(getString(R.string.update_channel_colon_space) + JoH.ucFirst(prefs.getString("update_channel", "beta")));
+        if (prefs.getBoolean(PREF_UPDATE_FROM_GITHUB, false)) {
+            channel.setText(getString(R.string.update_channel_colon_space) + "GitHub (" + prefs.getString(PREF_GITHUB_UPDATE_REPO, DEFAULT_GITHUB_REPO) + ")");
+        } else {
+            channel.setText(getString(R.string.update_channel_colon_space) + JoH.ucFirst(prefs.getString("update_channel", "beta")));
+        }
 
         updateMessageText.setText(MESSAGE);
     }

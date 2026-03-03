@@ -403,6 +403,10 @@
     <string name="settings_on_external_storage">Загрузить/Сохранить настройки</string>
     <string name="get_notified_of_new_apk_releases">Получать уведомления о выходе новых версий apk</string>
     <string name="choose_stable_beta_or_alpha_releases">Выберите между релизами Stable, Beta или Alpha</string>
+    <string name="update_from_github_title">Проверять обновления в GitHub</string>
+    <string name="update_from_github_summary">Брать обновления из GitHub Releases (например Geniy83/xDrip). Версия берётся из тега релиза или имени APK (8 цифр yyyyMMdd).</string>
+    <string name="github_update_repo_title">Репозиторий GitHub</string>
+    <string name="github_update_repo_summary">Владелец/репозиторий, например Geniy83/xDrip</string>
     <string name="web_feedback_form_for_sending_messages">Веб-форма обратной связи для отправки сообщений и рейтингов xDrip+ разработчикам</string>
     <string name="be_master_for_followers">Быть мастером для фолловеров</string>
     <string name="this_device_will_send_data_to_followers">Это устройство будет отправлять данные фолловерам</string>
