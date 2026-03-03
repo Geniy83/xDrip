@@ -1754,7 +1754,7 @@
     <string name="libre_filter_length_title">Smooth libre 3 data when using xxx method</string>
     <string name="smoothing_filter_dashx_title">Smooth DashX data</string>
     <string name="smoothing_filter_ottai_title">Smooth Ottai data</string>
-    <string name="smoothing_filter_anytimect3_title">Smooth AnytimeCT3 data</string>
+    <string name="smoothing_filter_anytime_title">Smooth Anytime data</string>
     <string name="smoothing_filter_interapp_summary">Weighted average over the selected minutes (same as Libre patched app). 0 = no smoothing.</string>
     <string name="enable_streaming_dialog_yes">Connect to this Libre2 sensor</string>
     <string name="enable_streaming_dialog_no">Don\'t connect to this Libre2 sensor </string>
