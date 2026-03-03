@@ -16,6 +16,7 @@ import com.eveningoutpost.dexdrip.models.UserError.Log;
 import com.eveningoutpost.dexdrip.utilitymodels.Intents;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.utils.DexCollectionType;
+import com.eveningoutpost.dexdrip.utils.GlucoseSmoother;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,7 +109,7 @@ public class OttaiAppReceiver extends BroadcastReceiver {
                                                         } catch (JSONException e) {
                                                             //
                                                         }
-                                                        bgReadingInsertFromData(json_object.getLong("date"),
+                                                        bgReadingInsertFromData(context, json_object.getLong("date"),
                                                                 json_object.getDouble("sgv"), slope, true);
 
                                                         break;
@@ -145,10 +146,11 @@ public class OttaiAppReceiver extends BroadcastReceiver {
         }.start();
     }
 
-    public static BgReading bgReadingInsertFromData(long timestamp, double sgv, double slope, boolean do_notification) {
+    public static BgReading bgReadingInsertFromData(Context context, long timestamp, double sgv, double slope, boolean do_notification) {
         Log.d(TAG, "Ottai bgReadingInsertFromData called timestamp = " + timestamp + " bg = " + sgv + " time =" + JoH.dateTimeText(timestamp));
         Sensor.createDefaultIfMissing();
 
-        return BgReading.bgReadingInsertLibre2(sgv, timestamp, sgv); // notify and force sensor
+        double value = GlucoseSmoother.getSmoothedValueForInterApp(context, GlucoseSmoother.SOURCE_OTTAI, timestamp, sgv);
+        return BgReading.bgReadingInsertLibre2(value, timestamp, sgv);
     }
 }

@@ -15,6 +15,7 @@ import com.eveningoutpost.dexdrip.models.AlertType;
 import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.DesertSync;
 import com.eveningoutpost.dexdrip.models.JoH;
+import com.eveningoutpost.dexdrip.models.InterAppRawValue;
 import com.eveningoutpost.dexdrip.models.Libre2RawValue;
 import com.eveningoutpost.dexdrip.models.Libre2Sensor;
 import com.eveningoutpost.dexdrip.models.LibreBlock;
@@ -57,6 +58,7 @@ public class IdempotentMigrations {
         DesertSync.updateDB();
         PenData.updateDB();
         Libre2RawValue.updateDB();
+        InterAppRawValue.updateDB();
         Libre2Sensor.updateDB();
 //        BgReadingArchive.updateDB();
         AlertType.fixUpTable();

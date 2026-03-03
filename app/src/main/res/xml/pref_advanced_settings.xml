@@ -1034,6 +1034,27 @@
                 android:switchTextOff="@string/short_off_text_for_switches"
                 android:switchTextOn="@string/short_on_text_for_switches"
                 android:title="@string/accept_external_status" />
+            <ListPreference
+                android:defaultValue="0"
+                android:entries="@array/libreFilterLengthMethods"
+                android:entryValues="@array/libreFilterLengthValues"
+                android:key="smoothing_filter_length_dashx"
+                android:summary="@string/smoothing_filter_interapp_summary"
+                android:title="@string/smoothing_filter_dashx_title" />
+            <ListPreference
+                android:defaultValue="0"
+                android:entries="@array/libreFilterLengthMethods"
+                android:entryValues="@array/libreFilterLengthValues"
+                android:key="smoothing_filter_length_ottai"
+                android:summary="@string/smoothing_filter_interapp_summary"
+                android:title="@string/smoothing_filter_ottai_title" />
+            <ListPreference
+                android:defaultValue="0"
+                android:entries="@array/libreFilterLengthMethods"
+                android:entryValues="@array/libreFilterLengthValues"
+                android:key="smoothing_filter_length_anytimect3"
+                android:summary="@string/smoothing_filter_interapp_summary"
+                android:title="@string/smoothing_filter_anytimect3_title" />
             <SwitchPreference
                 android:defaultValue="false"
                 android:key="xdrip_webservice"

@@ -14,6 +14,7 @@ import com.eveningoutpost.dexdrip.models.UserError;
 import com.eveningoutpost.dexdrip.utilitymodels.Intents;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.utils.DexCollectionType;
+import com.eveningoutpost.dexdrip.utils.GlucoseSmoother;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -91,7 +92,7 @@ public class AnytimeCT3AppReceiver extends BroadcastReceiver {
                                                         } catch (JSONException e) {
                                                             //
                                                         }
-                                                        bgReadingInsertFromData(json_object.getLong("date"),
+                                                        bgReadingInsertFromData(context, json_object.getLong("date"),
                                                                 json_object.getDouble("sgv"), slope, true);
 
                                                         break;
@@ -128,10 +129,11 @@ public class AnytimeCT3AppReceiver extends BroadcastReceiver {
         }.start();
     }
 
-    public static BgReading bgReadingInsertFromData(long timestamp, double sgv, double slope, boolean do_notification) {
+    public static BgReading bgReadingInsertFromData(Context context, long timestamp, double sgv, double slope, boolean do_notification) {
         UserError.Log.d(TAG, "AnytimeCT3 bgReadingInsertFromData called timestamp = " + timestamp + " bg = " + sgv + " time =" + JoH.dateTimeText(timestamp));
         Sensor.createDefaultIfMissing();
 
-        return BgReading.bgReadingInsertLibre2(sgv, timestamp, sgv); // notify and force sensor
+        double value = GlucoseSmoother.getSmoothedValueForInterApp(context, GlucoseSmoother.SOURCE_ANYTIMECT3, timestamp, sgv);
+        return BgReading.bgReadingInsertLibre2(value, timestamp, sgv);
     }
 }
