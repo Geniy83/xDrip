@@ -1554,7 +1554,6 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
 
             final Preference scanShare = findPreference("scan_share2_barcode");
             final EditTextPreference transmitterId = (EditTextPreference) findPreference("dex_txid");
-            final EditTextPreference poct_transmitterId = (EditTextPreference) findPreference("poct_txid");
            // final Preference closeGatt = findPreference("close_gatt_on_ble_disconnect");
 
             final Preference pebbleSync2 = findPreference("broadcast_to_pebble_type");
@@ -2103,12 +2102,6 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     } catch (Exception e) {
                         //
                     }
-                }
-
-                if (collectionType == DexCollectionType.PoctechCT14) {
-                    collectionCategory.addPreference(poct_transmitterId);
-                } else {
-                    collectionCategory.removePreference(poct_transmitterId);
                 }
 
                 final PreferenceScreen g5_settings_screen = (PreferenceScreen) findPreference("xdrip_plus_g5_extra_settings");

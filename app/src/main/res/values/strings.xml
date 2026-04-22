@@ -271,7 +271,6 @@
     <string name="hardware_data_source">Hardware Data Source</string>
     <string name="enter_ten_character_dexcom_receiver_serial">Enter 10-character Dexcom Receiver serial number</string>
     <string name="dexcom_transmitter_id">Dexcom Transmitter ID</string>
-    <string name="poctech_transmitter_id">Poctech Transmitter ID</string>
     <string name="run_collector_in_foreground">Run Collector in foreground</string>
     <string name="shows_a_persistent_notification">Shows a persistent notification graph, visible on lock-screen and prevents Android killing the service.</string>
     <string name="title_collector_in_foreground">Collector in foreground</string>
@@ -755,7 +754,6 @@
     <string name="use_any_tag">Use any-tag optimized reading method</string>
     <string name="low_level_value">Low level diagnostic/prototype value</string>
     <string name="transmitter_id">ID of your Dexcom Transmitter, e.g. 12AB3</string>
-    <string name="poc_transmitter_id">ID of your POCTech Transmitter, e.g. SN08405040</string>
     <string name="advanced_g5_settings">Advanced Dexcom settings for rare situations</string>
     <string name="g5_debug_settings">Dex Debug Settings</string>
     <string name="g5_scan_constantly">Some devices work better when scanning constantly, others do not. If reading is reliable when this setting is not selected, you should have improved battery life. Normally best to keep this disabled</string>

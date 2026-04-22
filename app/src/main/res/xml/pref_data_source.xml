@@ -173,15 +173,6 @@
             android:summary="@string/transmitter_id"
             android:title="@string/dexcom_transmitter_id" />
 
-        <EditTextPreference
-            android:defaultValue="SN12345678"
-            android:inputType="textNoSuggestions|textVisiblePassword|textCapCharacters"
-            android:key="poct_txid"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:summary="@string/poc_transmitter_id"
-            android:title="@string/poctech_transmitter_id" />
-
         <CheckBoxPreference
             android:key="medtrum_use_native"
             android:defaultValue="true"

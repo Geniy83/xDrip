@@ -235,7 +235,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     public Viewport holdViewport = new Viewport();
     private boolean isBTShare;
     private boolean isG5Share;
-    private boolean isPoctechShare;
     private BroadcastReceiver _broadcastReceiver;
     private BroadcastReceiver newDataReceiver;
     private BroadcastReceiver statusReceiver;
@@ -2469,7 +2468,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
         isBTShare = CollectionServiceStarter.isBTShare(getApplicationContext());
         isG5Share = CollectionServiceStarter.isBTG5(getApplicationContext());
-        isPoctechShare = CollectionServiceStarter.isBTPoctech(getApplicationContext());
         boolean isWifiWixel = CollectionServiceStarter.isWifiWixel(getApplicationContext());
         boolean isWifiLibre = CollectionServiceStarter.isWifiLibre(getApplicationContext());
         alreadyDisplayedBgInfoCommon = false; // reset flag
@@ -2477,9 +2475,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             updateCurrentBgInfoForBtShare(notificationText);
         }
         if (isG5Share) {
-            updateCurrentBgInfoCommon(collector, notificationText);
-        }
-        if (isPoctechShare) {
             updateCurrentBgInfoCommon(collector, notificationText);
         }
         if (isBTWixelOrLimiTTer || isDexbridgeWixel || isWifiBluetoothWixel || isWifiandBTLibre) {
@@ -3866,21 +3861,4 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             SdcardImportExport.restoreSettingsNow(this);
         }
     }
-
-  /*  class ToolbarActionItemTarget implements Target {
-
-        private final Toolbar toolbar;
-        private final int menuItemId;
-
-        public ToolbarActionItemTarget(Toolbar toolbar, @IdRes int itemId) {
-            this.toolbar = toolbar;
-            this.menuItemId = itemId;
-        }
-
-        @Override
-        public Point getPoint() {
-            return new ViewTarget(toolbar.findViewById(menuItemId)).getPoint();
-        }
-
-    }*/
 }

@@ -108,7 +108,7 @@
         android:checkable="false"
         android:orderInCategory="1"
         android:onClick="deleteAllBG"
-        android:visible="false"
+        android:visible="true"
         android:showAsAction="never"/>
 
     <item android:id="@+id/testFeature"

@@ -724,7 +724,6 @@
     <string name="use_any_tag">Использовать оптимизированный метод сканирования any-tag</string>
     <string name="low_level_value">Низкоуровневое значение диагностики/прототипа</string>
     <string name="transmitter_id">ID вашего трансмиттера Dexcom, напр. 12AB3</string>
-    <string name="poc_transmitter_id">ID вашего трансмиттера POCTech, напр. SN08405040</string>
     <string name="advanced_g5_settings">Продвинутые настройки G5 для редких ситуаций</string>
     <string name="g5_debug_settings">Настройки отладки G5/G6/Dex1</string>
     <string name="g5_scan_constantly">Некоторые устройства лучше работают, когда сканируют постоянно, некоторые – нет. Если считывание работает, когда эта настройка не выбрана, у вас улучшится продолжительность работы от батареи. Обычно лучше держать это отключенным</string>

@@ -5,7 +5,6 @@ import com.eveningoutpost.dexdrip.services.DexShareCollectionService;
 import com.eveningoutpost.dexdrip.services.DoNothingService;
 import com.eveningoutpost.dexdrip.services.G5CollectionService;
 import com.eveningoutpost.dexdrip.services.Ob1G5CollectionService;
-import com.eveningoutpost.dexdrip.services.PoctechCollectionService;
 import com.eveningoutpost.dexdrip.services.UiBasedCollector;
 import com.eveningoutpost.dexdrip.services.WifiCollectionService;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
@@ -40,7 +39,6 @@ public enum DexCollectionType {
     WifiWixel("WifiWixel"),
     DexcomG5("DexcomG5"),
     DexcomG6("DexcomG6"), // currently pseudo
-    PoctechCT14("PoctechCT14"),
     WifiDexBridgeWixel("WifiDexbridgeWixel"),
     Follower("Follower"),
     LibreAlarm("LibreAlarm"),
@@ -96,13 +94,13 @@ public enum DexCollectionType {
         Collections.addAll(usesBtWixel, BluetoothWixel, LimiTTer, WifiBlueToothWixel, LimiTTerWifi); // Name is misleading here, should probably be using dexcollectionservice
         Collections.addAll(usesWifi, WifiBlueToothWixel, WifiWixel, WifiDexBridgeWixel, Mock, LimiTTerWifi, LibreWifi);
         Collections.addAll(usesXbridge, DexbridgeWixel, WifiDexBridgeWixel);
-        Collections.addAll(usesFiltered, DexbridgeWixel, WifiDexBridgeWixel, DexcomG5, WifiWixel, Follower, Mock, PoctechCT14); // Bluetooth and Wifi+Bluetooth need dynamic mode
+        Collections.addAll(usesFiltered, DexbridgeWixel, WifiDexBridgeWixel, DexcomG5, WifiWixel, Follower, Mock); // Bluetooth and Wifi+Bluetooth need dynamic mode
         Collections.addAll(usesLibre, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi, LibreReceiver);
         Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver, OttaiAppReceiver, SyaiAppReceiver, DashxAppReceiver, AnytimeAppReceiver);
         Collections.addAll(canNotStartStopOrCal, NSFollow, SHFollow, WebFollow, CLFollow, Disabled); // Collectors that cannot start/stop sensor or submit calibration (UiBased removed to allow calibration entry)
         Collections.addAll(alwaysNativeCal, Follower, GluPro); // always allow calibration entry
         Collections.addAll(usesBattery, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel, Follower, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi); // parakeet separate
-        Collections.addAll(usesDexcomRaw, BluetoothWixel, DexbridgeWixel, WifiWixel, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, Mock, PoctechCT14);
+        Collections.addAll(usesDexcomRaw, BluetoothWixel, DexbridgeWixel, WifiWixel, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, Mock);
         Collections.addAll(usesTransmitterBattery, WifiWixel, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel); // G4 transmitter battery
         Collections.addAll(newerCollector, NSFollow, SHFollow, WebFollow, CLFollow, GluPro);
     }
@@ -223,8 +221,6 @@ public enum DexCollectionType {
                 } else {
                     return G5CollectionService.class;
                 }
-            case PoctechCT14:
-                return PoctechCollectionService.class;
             case DexcomShare:
                 return DexShareCollectionService.class;
             case WifiWixel:
@@ -323,8 +319,6 @@ public enum DexCollectionType {
                     return Ob1G5CollectionService.usingG6() ? (shortTxId() ? "G7" : "G6 Native") : "G5 Native";
                 }
                 return dct.name();
-            case PoctechCT14:
-                return "Poctech CT14";
             case LibreWifi:
                 return "Network libre";
             case NSFollow:
@@ -398,7 +392,6 @@ public enum DexCollectionType {
             case Follower:
                 return libreOneMinuteFollowers ? 59_000 : 240_000;
             case DashxAppReceiver:
-                return 60_000; // 1 minutes
             case AnytimeAppReceiver:
                 return 60_000; // 1 minutes
             case UiBased:

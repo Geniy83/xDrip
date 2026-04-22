@@ -497,10 +497,6 @@
             android:enabled="true"
             android:foregroundServiceType="connectedDevice|location" />
         <service
-            android:name=".services.PoctechCollectionService"
-            android:enabled="true"
-            android:foregroundServiceType="connectedDevice|location" />
-        <service
             android:name=".insulin.pendiq.PendiqService"
             android:enabled="true"
             android:exported="false"

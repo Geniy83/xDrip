@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 
-import com.eveningoutpost.dexdrip.BuildConfig;
 import com.eveningoutpost.dexdrip.GcmActivity;
 import com.eveningoutpost.dexdrip.Home;
 import com.eveningoutpost.dexdrip.models.JoH;
@@ -17,7 +16,6 @@ import com.eveningoutpost.dexdrip.services.DexShareCollectionService;
 import com.eveningoutpost.dexdrip.services.DoNothingService;
 import com.eveningoutpost.dexdrip.services.G5CollectionService;
 import com.eveningoutpost.dexdrip.services.Ob1G5CollectionService;
-import com.eveningoutpost.dexdrip.services.PoctechCollectionService;
 import com.eveningoutpost.dexdrip.services.WifiCollectionService;
 import com.eveningoutpost.dexdrip.utilitymodels.pebble.PebbleUtil;
 import com.eveningoutpost.dexdrip.utilitymodels.pebble.PebbleWatchSync;
@@ -179,15 +177,6 @@ public class CollectionServiceStarter {
         return collection_method.equals("DexcomG5");
     }
 
-    public static boolean isBTPoctech(Context context) {
-        String collection_method = Pref.getString("dex_collection_method", "BluetoothWixel");
-        return collection_method.equals("PoctechCT14");
-    }
-
-    private static boolean isBTPoctech(String collection_method) {
-        return collection_method.equals("PoctechCT14");
-    }
-
     public static boolean isWifiWixel(Context context) {
         return Pref.getString("dex_collection_method", "BluetoothWixel").equals("WifiWixel");
     }
@@ -238,7 +227,6 @@ public class CollectionServiceStarter {
         stopWifWixelThread();
         stopFollowerThread();
         stopG5Service();
-        stopPoctechService();
         JoH.stopService(getCollectorServiceClass(Medtrum));
         JoH.stopService(getCollectorServiceClass(NSFollow));
         JoH.stopService(getCollectorServiceClass(SHFollow));
@@ -259,7 +247,6 @@ public class CollectionServiceStarter {
             stopBtShareService();
             stopFollowerThread();
             stopG5Service();
-            stopPoctechService();
 
             if (prefs.getBoolean("wear_sync", false)) {//KS
                 boolean enable_wearG5 = prefs.getBoolean("enable_wearG5", false);
@@ -277,7 +264,6 @@ public class CollectionServiceStarter {
             stopFollowerThread();
             stopBtShareService();
             stopG5Service();
-            stopPoctechService();
 
             startWifWixelThread();
         } else if (isBTShare(collection_method)) {
@@ -286,7 +272,6 @@ public class CollectionServiceStarter {
             stopFollowerThread();
             stopWifWixelThread();
             stopG5Service();
-            stopPoctechService();
 
             if (prefs.getBoolean("wear_sync", false)) {//KS
                 boolean enable_wearG5 = prefs.getBoolean("enable_wearG5", false);
@@ -318,25 +303,6 @@ public class CollectionServiceStarter {
                 startBtG5Service();
             }
 
-        } else if (isBTPoctech(collection_method)) {
-            Log.d(TAG, "Starting Poctech collector");
-            stopBtWixelService();
-            stopWifWixelThread();
-            stopBtShareService();
-
-            if (prefs.getBoolean("wear_sync", false)) {//KS
-                boolean enable_wearG5 = prefs.getBoolean("enable_wearG5", false);
-                boolean force_wearG5 = prefs.getBoolean("force_wearG5", false);
-                startServiceCompat(new Intent(context, WatchUpdaterService.class));
-                if (!enable_wearG5 || (enable_wearG5 && !force_wearG5)) { //don't start if Wear G5 Collector Service is active
-                    startBtPoctechService();
-                } else {
-                    Log.d(TAG, "Not starting because of force wear");
-                }
-            } else {
-                startBtPoctechService();
-            }
-
         } else if (isWifiandBTWixel(context) || isWifiandDexBridge() || isWifiandBTLibre(context)) {
             Log.d("DexDrip", "Starting wifi and bt wixel collector");
             stopBtWixelService();
@@ -344,8 +310,6 @@ public class CollectionServiceStarter {
             stopWifWixelThread();
             stopBtShareService();
             stopG5Service();
-            stopPoctechService();
-
             // start both
             Log.d("DexDrip", "Starting wifi wixel collector first");
             startWifWixelThread();
@@ -366,7 +330,6 @@ public class CollectionServiceStarter {
             stopBtShareService();
             stopBtWixelService();
             stopG5Service();
-            stopPoctechService();
 
             startFollowerThread();
         } else {
@@ -420,9 +383,6 @@ public class CollectionServiceStarter {
             case DexcomG5:
                 collectionServiceStarter.startBtG5Service();
                 break;
-            case PoctechCT14:
-                collectionServiceStarter.startBtPoctechService();
-                break;
             case Medtrum:
                 JoH.startService(getCollectorServiceClass(Medtrum));
             default:
@@ -437,7 +397,6 @@ public class CollectionServiceStarter {
         collectionServiceStarter.stopBtShareService();
         collectionServiceStarter.stopBtWixelService();
         collectionServiceStarter.stopG5Service();
-        collectionServiceStarter.stopPoctechService();
         Log.d(TAG, "stopBtService should have called onDestroy");
     }
 
@@ -473,12 +432,6 @@ public class CollectionServiceStarter {
             startServiceCompat(new Intent(this.mContext, Ob1G5CollectionService.class));
         }
         //}
-    }
-
-    private void startBtPoctechService() {
-        Log.d(TAG, "starting Poctech service");
-        PoctechCollectionService.keep_running = true;
-        startServiceCompat(new Intent(this.mContext, PoctechCollectionService.class));
     }
 
     private void startPebbleSyncService() {
@@ -543,12 +496,6 @@ public class CollectionServiceStarter {
         Ob1G5CollectionService.keep_running = false; // ensure zombie stays down
         this.mContext.stopService(new Intent(this.mContext, Ob1G5CollectionService.class));
         Ob1G5CollectionService.resetSomeInternalState();
-    }
-
-    private void stopPoctechService() {
-        Log.d(TAG, "stopping Poctech services");
-        PoctechCollectionService.keep_running = false;
-        this.mContext.stopService(new Intent(this.mContext, PoctechCollectionService.class));
     }
 
     private void startServiceCompat(final Class service) {
