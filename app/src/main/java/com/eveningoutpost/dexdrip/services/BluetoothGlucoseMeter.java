@@ -201,20 +201,27 @@ public class BluetoothGlucoseMeter extends Service {
                 services_discovered = true;
                 statusUpdate("Services discovered");
 
-                bondingstate = mBluetoothGatt.getDevice().getBondState();
-                if (bondingstate != BluetoothDevice.BOND_BONDED) {
-                    statusUpdate("Attempting to create pairing bond - device must be in pairing mode!");
-                    sendDeviceUpdate(gatt.getDevice());
-                    mBluetoothGatt.getDevice().createBond();
-                    waitFor(1000);
+                // Satellite authenticates with its own PIN-over-NUS scheme and doesn't expect
+                // classic BLE bonding - attempting createBond() on it just gets rejected by the
+                // device and surfaces a spurious "pairing rejected" system notification.
+                final boolean isSatelliteMeter = hasNordicUartService();
+
+                if (!isSatelliteMeter) {
                     bondingstate = mBluetoothGatt.getDevice().getBondState();
                     if (bondingstate != BluetoothDevice.BOND_BONDED) {
-                        statusUpdate("Pairing appeared to fail");
-                    } else {
+                        statusUpdate("Attempting to create pairing bond - device must be in pairing mode!");
                         sendDeviceUpdate(gatt.getDevice());
+                        mBluetoothGatt.getDevice().createBond();
+                        waitFor(1000);
+                        bondingstate = mBluetoothGatt.getDevice().getBondState();
+                        if (bondingstate != BluetoothDevice.BOND_BONDED) {
+                            statusUpdate("Pairing appeared to fail");
+                        } else {
+                            sendDeviceUpdate(gatt.getDevice());
+                        }
+                    } else {
+                        Log.d(TAG, "Device is already bonded - good");
                     }
-                } else {
-                    Log.d(TAG, "Device is already bonded - good");
                 }
 
                 if (d) {
@@ -225,7 +232,7 @@ public class BluetoothGlucoseMeter extends Service {
                 }
 
                 if (queue.isEmpty()) {
-                    if (hasNordicUartService()) {
+                    if (isSatelliteMeter) {
                         beginSatelliteSession();
                     } else {
                         statusUpdate("Requesting data from meter");
