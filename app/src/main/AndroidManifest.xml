@@ -899,6 +899,9 @@
             android:name=".watch.miband.MiBandService"
             android:foregroundServiceType="connectedDevice|location" />
         <service
+            android:name=".bledisplay.BleDisplay"
+            android:foregroundServiceType="connectedDevice|location" />
+        <service
             android:name=".cgm.nsfollow.NightscoutFollowService"
             android:foregroundServiceType="dataSync" />
         <service

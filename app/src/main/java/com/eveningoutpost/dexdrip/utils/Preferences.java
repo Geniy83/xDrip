@@ -66,6 +66,7 @@ import com.eveningoutpost.dexdrip.ParakeetHelper;
 import com.eveningoutpost.dexdrip.R;
 import com.eveningoutpost.dexdrip.WidgetUpdateService;
 import com.eveningoutpost.dexdrip.alert.Registry;
+import com.eveningoutpost.dexdrip.bledisplay.BleDisplay;
 import com.eveningoutpost.dexdrip.calibrations.PluggableCalibration;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.CareLinkFollowService;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.auth.CareLinkAuthType;
@@ -1217,6 +1218,25 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     IncomingCallsReceiver.checkPermission(activity);
                     return true;
                 });
+            } catch (Exception e) {
+                //
+            }
+
+            try {
+                findPreference(BleDisplay.PREF_BLE_DISPLAY_ENABLED).setOnPreferenceChangeListener((preference, newValue) -> {
+                    if ((Boolean) newValue) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            LocationHelper.requestLocationForBluetooth((Activity) preference.getContext());
+                        }
+                        checkReadPermission(this.getActivity());
+                    }
+                    return true;
+                });
+            } catch (Exception e) {
+                //
+            }
+            try {
+                bindPreferenceTitleAppendToMacValue(findPreference(BleDisplay.PREF_BLE_DISPLAY_MAC));
             } catch (Exception e) {
                 //
             }
@@ -3216,4 +3236,3 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
         return true;
     }
 }
-

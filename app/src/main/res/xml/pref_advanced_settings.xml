@@ -570,6 +570,28 @@
             </PreferenceScreen>
         </PreferenceScreen>
         <PreferenceScreen
+            android:key="ble_display_preferences"
+            android:title="@string/title_ble_display">
+            <SwitchPreference
+                android:defaultValue="false"
+                android:key="ble_display_enabled"
+                android:summary="@string/summary_miband_enable"
+                android:switchTextOff="@string/short_off_text_for_switches"
+                android:switchTextOn="@string/short_on_text_for_switches"
+                android:title="@string/title_ble_display_enable" />
+            <EditTextPreference
+                android:key="ble_display_mac"
+                android:title="@string/title_ble_display_mac" />
+            <SwitchPreference
+                android:defaultValue="true"
+                android:dependency="ble_display_enabled"
+                android:key="ble_display_history_backfill"
+                android:summary="@string/summary_ble_display_history_backfill"
+                android:switchTextOff="@string/short_off_text_for_switches"
+                android:switchTextOn="@string/short_on_text_for_switches"
+                android:title="@string/title_ble_display_history_backfill" />
+        </PreferenceScreen>
+        <PreferenceScreen
             android:key="miband_preferences"
             android:title="@string/title_miband">
             <SwitchPreference
@@ -1707,4 +1729,3 @@
 
     </PreferenceCategory>
 </PreferenceScreen>
-

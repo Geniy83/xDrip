@@ -1,5 +1,6 @@
 package com.eveningoutpost.dexdrip;
 
+import com.eveningoutpost.dexdrip.bledisplay.BleDisplay;
 import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.LibreBlock;
@@ -58,6 +59,7 @@ public class NewDataObserver {
         sendToBroadcastService();
         sendToBlueJay();
         sendToRemoteBlueJay();
+        sendToBleDisplay();
         Notifications.start();
         InfoContentProvider.ping("bg");
         uploadToShare(bgReading, is_follower);
@@ -117,7 +119,7 @@ public class NewDataObserver {
     private static void sendToMiBand() {
 
         if (MiBandEntry.isEnabled()) {
-            Inevitable.task("poll-miband-for-bg",  2000, MiBandEntry::showLatestBG); // delay enough for BT to finish on collector
+            Inevitable.task("poll-miband-for-bg", 2000, MiBandEntry::showLatestBG); // delay enough for BT to finish on collector
         }
     }
 
@@ -140,6 +142,12 @@ public class NewDataObserver {
     private static void sendToRemoteBlueJay() {
         if (BlueJayEntry.isRemoteEnabled()) {
             Inevitable.task("poll-bluejay-remote-for-bg", DexCollectionType.hasBluetooth() ? 2000 : 500, BlueJayRemote::sendLatestBG); // delay enough for BT to finish on collector
+        }
+    }
+
+    private static void sendToBleDisplay() {
+        if (BleDisplay.isEnabled()) {
+            Inevitable.task("send-bg-to-ble-display", DexCollectionType.hasBluetooth() ? 2000 : 500, BleDisplay::sendLatestBG); // delay enough for BT to finish on collector
         }
     }
 

@@ -31,6 +31,7 @@ import com.eveningoutpost.dexdrip.GcmActivity;
 import com.eveningoutpost.dexdrip.glucosemeter.CurrentTimeRx;
 import com.eveningoutpost.dexdrip.glucosemeter.GlucoseReadingRx;
 import com.eveningoutpost.dexdrip.glucosemeter.RecordsCmdTx;
+import com.eveningoutpost.dexdrip.glucosemeter.SatelliteHelper;
 import com.eveningoutpost.dexdrip.glucosemeter.VerioHelper;
 import com.eveningoutpost.dexdrip.glucosemeter.caresens.ContextRx;
 import com.eveningoutpost.dexdrip.glucosemeter.caresens.TimeTx;
@@ -104,6 +105,14 @@ public class BluetoothGlucoseMeter extends Service {
 
     private static final UUID MANUFACTURER_NAME = UUID.fromString("00002a29-0000-1000-8000-00805f9b34fb");
 
+    private static final String PREF_SATELLITE_PIN = "satellite_meter_pin";
+
+    private static final int SATELLITE_STAGE_NONE = 0;
+    private static final int SATELLITE_STAGE_AWAITING_PIN = 1;
+    private static final int SATELLITE_STAGE_AWAITING_TIME_ACK = 2;
+    private static final int SATELLITE_STAGE_AWAITING_RECORD = 3;
+    private static int satelliteStage = SATELLITE_STAGE_NONE;
+    private static int satelliteRecordIndex = 0;
 
     private static final ConcurrentLinkedQueue<Bluetooth_CMD> queue = new ConcurrentLinkedQueue<>();
     private static final Object mLock = new Object(); // ok static?
@@ -216,29 +225,32 @@ public class BluetoothGlucoseMeter extends Service {
                 }
 
                 if (queue.isEmpty()) {
-                    statusUpdate("Requesting data from meter");
-                    Bluetooth_CMD.read(DEVICE_INFO_SERVICE, MANUFACTURER_NAME, "get device manufacturer");
-                    Bluetooth_CMD.read(CURRENT_TIME_SERVICE, TIME_CHARACTERISTIC, "get device time");
-
-                    Bluetooth_CMD.notify(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose record");
-                    Bluetooth_CMD.enable_notification_value(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose value");
-
-                    if (hasContextCharacteristic(gatt)) {
-                        Bluetooth_CMD.enable_notification_value(GLUCOSE_SERVICE, CONTEXT_CHARACTERISTIC, "notify new context value");
-                        Bluetooth_CMD.notify(GLUCOSE_SERVICE, CONTEXT_CHARACTERISTIC, "notify new glucose context");
+                    if (hasNordicUartService()) {
+                        beginSatelliteSession();
                     } else {
-                        if (d) {
-                            Log.d(TAG, "Device has no context characteristic. Skipping");
+                        statusUpdate("Requesting data from meter");
+                        Bluetooth_CMD.read(DEVICE_INFO_SERVICE, MANUFACTURER_NAME, "get device manufacturer");
+                        Bluetooth_CMD.read(CURRENT_TIME_SERVICE, TIME_CHARACTERISTIC, "get device time");
+
+                        Bluetooth_CMD.notify(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose record");
+                        Bluetooth_CMD.enable_notification_value(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose value");
+
+                        if (hasContextCharacteristic(gatt)) {
+                            Bluetooth_CMD.enable_notification_value(GLUCOSE_SERVICE, CONTEXT_CHARACTERISTIC, "notify new context value");
+                            Bluetooth_CMD.notify(GLUCOSE_SERVICE, CONTEXT_CHARACTERISTIC, "notify new glucose context");
+                        } else {
+                            if (d) {
+                                Log.d(TAG, "Device has no context characteristic. Skipping");
+                            }
                         }
+
+                        Bluetooth_CMD.enable_indications(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, "readings indication request");
+                        Bluetooth_CMD.notify(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, "notify glucose record");
+                        Bluetooth_CMD.write(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, RecordsCmdTx.getAllRecords(), "request all readings");
+                        Bluetooth_CMD.notify(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose record again"); // dummy
+
+                        Bluetooth_CMD.poll_queue();
                     }
-
-                    Bluetooth_CMD.enable_indications(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, "readings indication request");
-                    Bluetooth_CMD.notify(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, "notify glucose record");
-                    Bluetooth_CMD.write(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, RecordsCmdTx.getAllRecords(), "request all readings");
-                    Bluetooth_CMD.notify(GLUCOSE_SERVICE, GLUCOSE_CHARACTERISTIC, "notify new glucose record again"); // dummy
-
-                    Bluetooth_CMD.poll_queue();
-
                 } else {
                     Log.e(TAG, "Queue is not empty so not scheduling anything..");
                 }
@@ -751,8 +763,90 @@ public class BluetoothGlucoseMeter extends Service {
             } catch (Exception e) {
                 UserError.Log.wtf(TAG, "Got exception processing Verio data " + e);
             }
+        } else if (SatelliteHelper.NUS_TX.equals(characteristic.getUuid())) {
+            processSatelliteResponse(gatt, SatelliteHelper.decode(characteristic.getValue()));
         } else {
             UserError.Log.e(TAG, "Unknown characteristic change: " + characteristic.getUuid().toString() + " " + JoH.bytesToHex(characteristic.getValue()));
+        }
+    }
+
+    // Satellite speaks strict request/response: exactly one command is ever in flight,
+    // so the meaning of each incoming notification is determined by what stage of the
+    // pin -> settime -> rd.<idx> sequence we're currently in, rather than by its content.
+    private synchronized void processSatelliteResponse(final BluetoothGatt gatt, final String response) {
+        UserError.Log.d(TAG, "Satellite response [stage=" + satelliteStage + "]: " + response);
+        switch (satelliteStage) {
+            case SATELLITE_STAGE_AWAITING_PIN:
+                if (SatelliteHelper.isPinOk(response)) {
+                    statusUpdate("Satellite PIN accepted");
+                    satelliteStage = SATELLITE_STAGE_AWAITING_TIME_ACK;
+                    Bluetooth_CMD.write(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_RX, SatelliteHelper.getSetTimeCMD(JoH.tsl()), "sync Satellite clock to UTC");
+                    Bluetooth_CMD.poll_queue();
+                } else {
+                    satelliteStage = SATELLITE_STAGE_NONE;
+                    statusUpdate("Satellite PIN rejected - check the PIN in Bluetooth Meter settings");
+                }
+                break;
+
+            case SATELLITE_STAGE_AWAITING_TIME_ACK:
+                satelliteRecordIndex = 0;
+                satelliteStage = SATELLITE_STAGE_AWAITING_RECORD;
+                Bluetooth_CMD.write(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_RX, SatelliteHelper.getRecordCMD(satelliteRecordIndex), "read Satellite record " + satelliteRecordIndex);
+                Bluetooth_CMD.poll_queue();
+                break;
+
+            case SATELLITE_STAGE_AWAITING_RECORD:
+                if (SatelliteHelper.isEmptySlot(response)) {
+                    statusUpdate("Satellite: no more records to read");
+                    satelliteStage = SATELLITE_STAGE_NONE;
+                    break;
+                }
+                processSatelliteRecord(gatt, response);
+                satelliteRecordIndex++;
+                if (satelliteRecordIndex < SatelliteHelper.MAX_BACKFILL_RECORDS) {
+                    Bluetooth_CMD.write(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_RX, SatelliteHelper.getRecordCMD(satelliteRecordIndex), "read Satellite record " + satelliteRecordIndex);
+                    Bluetooth_CMD.poll_queue();
+                } else {
+                    satelliteStage = SATELLITE_STAGE_NONE;
+                }
+                break;
+
+            default:
+                UserError.Log.d(TAG, "Unexpected Satellite response outside of an active session: " + response);
+        }
+    }
+
+    private void processSatelliteRecord(final BluetoothGatt gatt, final String response) {
+        try {
+            final GlucoseReadingRx gtb = SatelliteHelper.parseRecord(response);
+            if (gtb == null) return;
+
+            markDeviceAsSuccessful(gatt);
+            statusUpdate("Glucose Record: " + JoH.dateTimeText(gtb.time) + "\n" + unitized_string_with_units_static(gtb.mgdl));
+
+            if (playSounds() && JoH.ratelimit("bt_meter_data_in", 1))
+                JoH.playResourceAudio(R.raw.bt_meter_data_in);
+
+            final BloodTest bt = BloodTest.create(gtb.time, gtb.mgdl, BLUETOOTH_GLUCOSE_METER_TAG + ":\nSatellite   " + mLastConnectedDeviceAddress);
+            if (bt != null) {
+                UserError.Log.d(TAG, "Successfully created new BloodTest from Satellite: " + bt.toS());
+                bt.glucoseReadingRx = gtb; // add reference
+                lastBloodTest = bt;
+                UserError.Log.uel(TAG, "New Satellite blood test data: " + BgGraphBuilder.unitized_string_static(bt.mgdl) + " @ " + JoH.dateTimeText(bt.timestamp) + " " + bt.source);
+
+                final long record_time = lastBloodTest.timestamp;
+                JoH.runOnUiThreadDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (lastBloodTest.timestamp == record_time) {
+                            if (ct == null) ct = new CurrentTimeRx(); // zero hack - Satellite has no Current Time Service
+                            evaluateLastRecords();
+                        }
+                    }
+                }, 1000);
+            }
+        } catch (Exception e) {
+            UserError.Log.wtf(TAG, "Got exception processing Satellite record " + e);
         }
     }
 
@@ -985,6 +1079,40 @@ public class BluetoothGlucoseMeter extends Service {
     private List<BluetoothGattService> getSupportedGattServices() {
         if (mBluetoothGatt == null) return null;
         return mBluetoothGatt.getServices();
+    }
+
+    /**
+     * Check if the connected device has Nordic UART Service (NUS)
+     * Used to detect Satellite glucose meter
+     * @return true if NUS service is present
+     */
+    private boolean hasNordicUartService() {
+        List<BluetoothGattService> services = getSupportedGattServices();
+        if (services == null) return false;
+        for (BluetoothGattService service : services) {
+            if (service.getUuid().equals(SatelliteHelper.NUS_SERVICE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Satellite meters need a 3-digit PIN sent before any other command is accepted.
+    // Must run before the standard glucose-service command sequence is queued, since
+    // Satellite has no Device Information Service and a queued read of MANUFACTURER_NAME
+    // would never get a callback, stalling the whole queue.
+    private void beginSatelliteSession() {
+        statusUpdate("Satellite meter detected (Nordic UART Service)");
+        final String pin = Pref.getStringDefaultBlank(PREF_SATELLITE_PIN);
+        if (pin.length() != 3) {
+            statusUpdate("Satellite meter needs a 3-digit PIN - set it in Bluetooth Meter settings");
+            return;
+        }
+        satelliteStage = SATELLITE_STAGE_AWAITING_PIN;
+        Bluetooth_CMD.notify(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_TX, "subscribe to Satellite notifications");
+        Bluetooth_CMD.enable_notification_value(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_TX, "enable Satellite notify value");
+        Bluetooth_CMD.write(SatelliteHelper.NUS_SERVICE, SatelliteHelper.NUS_RX, SatelliteHelper.getPinCMD(pin), "send Satellite pin");
+        Bluetooth_CMD.poll_queue();
     }
 
     // currently not used, will need updating if it is

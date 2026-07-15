@@ -796,6 +796,8 @@
     <string name="auto_connect_to_meter">Automatically connect and retrieve data from a standard\'s compliant glucose meter like the Contour Next One</string>
     <string name="summary_use_nfc_meter">Download glucose records from NFC meter when xDrip is open</string>
     <string name="title_use_nfc_meter">Use NFC Meter</string>
+    <string name="satellite_meter_pin_title">Satellite meter PIN</string>
+    <string name="satellite_meter_pin_summary">3-digit PIN printed on the Satellite (Сателлит+) glucose meter, required on every connection</string>
     <string name="use_bluetooth_meter">Use Bluetooth Meter</string>
     <string name="scan_for_bluetooth_meter">Scan for Bluetooth Meter</string>
     <string name="meter_connect_sound">Enable this to play sound effects when the meter connects, disconnects or syncs data</string>
@@ -1303,6 +1305,11 @@
 
     <string name="title_miband">MiBand</string>
     <string name="summary_miband_enable">Sync Data with MiBand fitness bands</string>
+    <string name="title_ble_display">BLE Display</string>
+    <string name="title_ble_display_enable">Send glucose to BLE Display</string>
+    <string name="title_ble_display_mac">Mac address</string>
+    <string name="title_ble_display_history_backfill">Send history backfill</string>
+    <string name="summary_ble_display_history_backfill">Send recent BG history to fill the display mini-graph after reconnect</string>
     <string name="title_miband_enable">Use MiBand Band</string>
     <string name="title_miband_screens_features">MiBand Screens / Features</string>
     <string name="title_miband_screen_battery">Show Battery</string>
