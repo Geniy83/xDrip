@@ -41,6 +41,12 @@ import java.util.regex.Pattern;
  * The meter reports whole-blood (capillary) glucose in mmol/L x10. xDrip
  * works in plasma-equivalent values, so we apply the same 1.12 capillary to
  * plasma coefficient the official app uses before converting to mg/dL.
+ * <p>
+ * The 3-digit PIN is not printed on the device as-is: the label instead
+ * carries a longer alphanumeric code (scanned as a QR/DataMatrix code by the
+ * official app, e.g. "D0012345678901") from which the PIN is derived with a
+ * simple linear-congruential scramble ({@link #derivePinFromCode}). Users can
+ * type that printed code directly instead of hunting for a bare 3-digit PIN.
  */
 public class SatelliteHelper {
 
@@ -63,6 +69,15 @@ public class SatelliteHelper {
     private static final double MAX_PLAUSIBLE_MGDL = 700;
 
     private static final Pattern RD_EVENT_PATTERN = Pattern.compile("^rd(\\d{12})(\\d{3})(\\d{3})$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern RAW_PIN_PATTERN = Pattern.compile("^\\d{3}$");
+    private static final Pattern PRINTED_CODE_PATTERN = Pattern.compile("^[DE]\\d{7,}$", Pattern.CASE_INSENSITIVE);
+
+    // extractPinCode() coefficients from the official app's StringExtensionsKt
+    private static final long PIN_MUL_COEFFICIENT = 599681139L;
+    private static final long PIN_PLUS_COEFFICIENT = 123L;
+    private static final long PIN_MASK_32BIT = 0xFFFFFFFFL;
+    private static final long PIN_MODULUS = 1000L;
+    private static final int PIN_DIGITS_FOR_DERIVATION = 6;
 
     public static String decode(byte[] value) {
         if (value == null) return "";
@@ -71,6 +86,41 @@ public class SatelliteHelper {
 
     public static byte[] getPinCMD(String pin) {
         return ("pin." + pin).getBytes(StandardCharsets.US_ASCII);
+    }
+
+    /**
+     * Accepts either a bare 3-digit PIN or the longer alphanumeric code printed
+     * on the meter's label (as scanned from the QR/DataMatrix code by the
+     * official app) and returns the actual 3-digit pairing PIN.
+     *
+     * @return the 3-digit PIN, or null if the input matches neither format
+     */
+    public static String resolvePin(String input) {
+        if (input == null) return null;
+        final String trimmed = input.trim();
+        if (RAW_PIN_PATTERN.matcher(trimmed).matches()) {
+            return trimmed;
+        }
+        if (PRINTED_CODE_PATTERN.matcher(trimmed).matches()) {
+            return derivePinFromCode(trimmed);
+        }
+        return null;
+    }
+
+    /**
+     * Derives the 3-digit pairing PIN from the longer code printed on the
+     * meter's label, matching the official app's extractPinCode(): the last
+     * {@value #PIN_DIGITS_FOR_DERIVATION} digits (after dropping the leading
+     * D/E letter) are scrambled with a linear-congruential step and reduced
+     * mod 1000.
+     */
+    private static String derivePinFromCode(String code) {
+        final String digitsPart = code.substring(1); // drop leading D/E letter
+        final String last6 = digitsPart.substring(digitsPart.length() - PIN_DIGITS_FOR_DERIVATION);
+        final long digits6 = Long.parseLong(last6);
+        final long scrambled = (digits6 * PIN_MUL_COEFFICIENT + PIN_PLUS_COEFFICIENT) & PIN_MASK_32BIT;
+        final long pin = scrambled % PIN_MODULUS;
+        return String.format(Locale.US, "%03d", pin);
     }
 
     public static byte[] getSetTimeCMD(long epochMillisUtc) {

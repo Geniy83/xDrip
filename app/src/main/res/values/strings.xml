@@ -797,7 +797,7 @@
     <string name="summary_use_nfc_meter">Download glucose records from NFC meter when xDrip is open</string>
     <string name="title_use_nfc_meter">Use NFC Meter</string>
     <string name="satellite_meter_pin_title">Satellite meter PIN</string>
-    <string name="satellite_meter_pin_summary">3-digit PIN printed on the Satellite (Сателлит+) glucose meter, required on every connection</string>
+    <string name="satellite_meter_pin_summary">Enter either the 3-digit PIN or the longer code printed under the QR/DataMatrix label on the back of the Satellite (Сателлит+) meter - required on every connection</string>
     <string name="use_bluetooth_meter">Use Bluetooth Meter</string>
     <string name="scan_for_bluetooth_meter">Scan for Bluetooth Meter</string>
     <string name="meter_connect_sound">Enable this to play sound effects when the meter connects, disconnects or syncs data</string>

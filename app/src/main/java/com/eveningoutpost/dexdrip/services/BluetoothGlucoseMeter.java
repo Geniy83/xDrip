@@ -1103,9 +1103,10 @@ public class BluetoothGlucoseMeter extends Service {
     // would never get a callback, stalling the whole queue.
     private void beginSatelliteSession() {
         statusUpdate("Satellite meter detected (Nordic UART Service)");
-        final String pin = Pref.getStringDefaultBlank(PREF_SATELLITE_PIN);
-        if (pin.length() != 3) {
-            statusUpdate("Satellite meter needs a 3-digit PIN - set it in Bluetooth Meter settings");
+        // accepts either a bare 3-digit PIN or the longer code printed on the meter's label
+        final String pin = SatelliteHelper.resolvePin(Pref.getStringDefaultBlank(PREF_SATELLITE_PIN));
+        if (pin == null) {
+            statusUpdate("Satellite meter needs a PIN - enter the 3-digit PIN or the printed label code in Bluetooth Meter settings");
             return;
         }
         satelliteStage = SATELLITE_STAGE_AWAITING_PIN;
