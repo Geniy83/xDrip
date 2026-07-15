@@ -11,6 +11,7 @@ import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.Sensor;
 import com.eveningoutpost.dexdrip.models.UserError;
+import com.eveningoutpost.dexdrip.utilitymodels.BgGraphBuilder;
 import com.eveningoutpost.dexdrip.utilitymodels.Intents;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.utils.DexCollectionType;
@@ -21,6 +22,7 @@ import org.json.JSONObject;
 
 public class AnytimeAppReceiver extends BroadcastReceiver {
     private static final String TAG = "Anytime";
+    private static final String ANYTIME_DIRECTION_SOURCE_PREFIX = "AnytimeDirection=";
     private static final boolean debug = false;
     private static final boolean d = false;
     private static SharedPreferences prefs;
@@ -86,14 +88,9 @@ public class AnytimeAppReceiver extends BroadcastReceiver {
                                                 final String type = json_object.getString("type");
                                                 switch (type) {
                                                     case "sgv":
-                                                        double slope = 0;
-                                                        try {
-                                                            slope = BgReading.slopefromName(json_object.getString("direction"));
-                                                        } catch (JSONException e) {
-                                                            //
-                                                        }
+                                                        final String direction = json_object.optString("direction", null);
                                                         bgReadingInsertFromData(context, json_object.getLong("date"),
-                                                                json_object.getDouble("sgv"), slope, true);
+                                                                json_object.getDouble("sgv"), direction, true);
 
                                                         break;
                                                     default:
@@ -130,10 +127,39 @@ public class AnytimeAppReceiver extends BroadcastReceiver {
     }
 
     public static BgReading bgReadingInsertFromData(Context context, long timestamp, double sgv, double slope, boolean do_notification) {
+        return bgReadingInsertFromData(context, timestamp, sgv, (String) null, do_notification);
+    }
+
+    public static BgReading bgReadingInsertFromData(Context context, long timestamp, double sgv, String direction, boolean do_notification) {
         UserError.Log.d(TAG, "Anytime bgReadingInsertFromData called timestamp = " + timestamp + " bg = " + sgv + " time =" + JoH.dateTimeText(timestamp));
         Sensor.createDefaultIfMissing();
 
         double value = GlucoseSmoother.getSmoothedValueForInterApp(context, GlucoseSmoother.SOURCE_ANYTIME, timestamp, sgv);
-        return BgReading.bgReadingInsertLibre2(value, timestamp, sgv);
+        final double mmolRaw = BgGraphBuilder.mmolConvert(value);
+        final String mmolDisplay = BgGraphBuilder.unitized_string(value, false);
+        UserError.Log.d(TAG, "Anytime conversion chain mg/dl in=" + sgv
+                + " -> mg/dl stored=" + value
+                + " -> mmol raw=" + JoH.qs(mmolRaw, 3)
+                + " -> mmol display=" + mmolDisplay);
+
+        final BgReading bgReading = BgReading.bgReadingInsertLibre2(value, timestamp, sgv);
+        if (bgReading != null && direction != null) {
+            final String normalizedDirection = direction.trim();
+            if (isSupportedDirectionName(normalizedDirection)) {
+                bgReading.appendSourceInfo(ANYTIME_DIRECTION_SOURCE_PREFIX + normalizedDirection, true);
+                UserError.Log.d(TAG, "Anytime direction override stored: " + normalizedDirection);
+            }
+        }
+        return bgReading;
+    }
+
+    private static boolean isSupportedDirectionName(final String direction) {
+        return "DoubleDown".equals(direction)
+                || "SingleDown".equals(direction)
+                || "FortyFiveDown".equals(direction)
+                || "Flat".equals(direction)
+                || "FortyFiveUp".equals(direction)
+                || "SingleUp".equals(direction)
+                || "DoubleUp".equals(direction);
     }
 }

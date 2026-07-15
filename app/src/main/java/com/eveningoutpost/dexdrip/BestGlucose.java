@@ -36,6 +36,7 @@ import static com.eveningoutpost.dexdrip.calibrations.PluggableCalibration.getCa
 public class BestGlucose {
 
     final static String TAG = "BestGlucose";
+    private static final String ANYTIME_DIRECTION_SOURCE_PREFIX = "AnytimeDirection=";
     final static boolean d = true; // debug flag
     private static SharedPreferences prefs;
 
@@ -265,6 +266,14 @@ public class BestGlucose {
             slope_name = "NOT COMPUTABLE";
         }
 
+        final String anytimeDirection = extractAnytimeDirection(lastBgReading.source_info);
+        if (anytimeDirection != null) {
+            final double directionSlopeByMinute = BgReading.slopefromName(anytimeDirection) * 60000;
+            slope_arrow = BgReading.slopeToArrowSymbol(directionSlopeByMinute);
+            slope_name = anytimeDirection;
+            UserError.Log.d(TAG, "Using Anytime direction override for arrow: " + anytimeDirection);
+        }
+
         dg.mgdl = estimate;
         dg.delta_mgdl = estimated_delta;
         dg.warning = warning_level;
@@ -326,6 +335,18 @@ public class BestGlucose {
         } else {
             return (value2 - value1) / (timestamp2 - timestamp1);
         }
+    }
+
+    static String extractAnytimeDirection(final String sourceInfo) {
+        if (sourceInfo == null || sourceInfo.length() == 0) return null;
+        final String[] parts = sourceInfo.split("::");
+        for (String part : parts) {
+            if (part.startsWith(ANYTIME_DIRECTION_SOURCE_PREFIX)) {
+                final String direction = part.substring(ANYTIME_DIRECTION_SOURCE_PREFIX.length()).trim();
+                if (direction.length() > 0) return direction;
+            }
+        }
+        return null;
     }
 
 

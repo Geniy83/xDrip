@@ -766,6 +766,8 @@
     <string name="auto_connect_to_meter">Автоматически подключаться и извлекать данные из стандартных подходящих глюкометров, таких как Contour Next One</string>
     <string name="summary_use_nfc_meter">Скачивать показания глюкозы с глюкометра NFC, когда xDrip+ открыт</string>
     <string name="title_use_nfc_meter">Использовать NFC-глюкометр</string>
+    <string name="satellite_meter_pin_title">PIN глюкометра Сателлит</string>
+    <string name="satellite_meter_pin_summary">Введите 3-значный PIN или более длинный код под этикеткой QR/DataMatrix на задней стороне глюкометра Сателлит — требуется при каждом подключении</string>
     <string name="use_bluetooth_meter">Использ. Bluetooth-глюкометр</string>
     <string name="scan_for_bluetooth_meter">Найти Bluetooth-глюкометр</string>
     <string name="meter_connect_sound">Включите это для проигрывания звуковых эффектов, когда глюкометр подключается, отсоединяется или синхронизирует данные</string>

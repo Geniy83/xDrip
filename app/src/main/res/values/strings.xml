@@ -1305,11 +1305,6 @@
 
     <string name="title_miband">MiBand</string>
     <string name="summary_miband_enable">Sync Data with MiBand fitness bands</string>
-    <string name="title_ble_display">BLE Display</string>
-    <string name="title_ble_display_enable">Send glucose to BLE Display</string>
-    <string name="title_ble_display_mac">Mac address</string>
-    <string name="title_ble_display_history_backfill">Send history backfill</string>
-    <string name="summary_ble_display_history_backfill">Send recent BG history to fill the display mini-graph after reconnect</string>
     <string name="title_miband_enable">Use MiBand Band</string>
     <string name="title_miband_screens_features">MiBand Screens / Features</string>
     <string name="title_miband_screen_battery">Show Battery</string>
