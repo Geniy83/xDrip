@@ -332,6 +332,94 @@
             </PreferenceScreen>
 
             <PreferenceScreen
+                android:key="cloud_storage_vk"
+                android:summary="@string/summary_vk_outbound"
+                android:title="@string/title_vk_outbound">
+
+                <SwitchPreference
+                    android:defaultValue="false"
+                    android:key="cloud_storage_vk_enable"
+                    android:summary="@string/vk_outbound_help"
+                    android:switchTextOff="@string/short_off_text_for_switches"
+                    android:switchTextOn="@string/short_on_text_for_switches"
+                    android:title="@string/title_vk_outbound_enable" />
+                <EditTextPreference
+                    android:defaultValue="VK text message"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:key="cloud_storage_vk_name"
+                    android:title="@string/title_vk_outbound_name" />
+                <ListPreference
+                    android:defaultValue="vk_messages"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:entries="@array/vk_outbound_preset_entries"
+                    android:entryValues="@array/vk_outbound_preset_values"
+                    android:key="cloud_storage_vk_preset"
+                    android:title="@string/title_vk_outbound_preset" />
+                <EditTextPreference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:inputType="textPassword"
+                    android:key="cloud_storage_vk_token"
+                    android:summary="@string/summary_vk_outbound_token"
+                    android:title="@string/title_vk_outbound_token" />
+                <EditTextPreference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:key="cloud_storage_vk_recipients"
+                    android:summary="@string/summary_vk_outbound_recipients"
+                    android:title="@string/title_vk_outbound_recipients" />
+                <EditTextPreference
+                    android:defaultValue="https://api.vk.com/method/messages.send"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:inputType="textUri"
+                    android:key="cloud_storage_vk_url"
+                    android:title="@string/title_vk_outbound_url" />
+                <EditTextPreference
+                    android:defaultValue="5.199"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:key="cloud_storage_vk_api_version"
+                    android:title="@string/title_vk_outbound_api_version" />
+                <EditTextPreference
+                    android:defaultValue="{status_emoji} {value} {unit} {trend_arrow} {time}"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:dialogMessage="@string/dialog_vk_outbound_template"
+                    android:inputType="textMultiLine"
+                    android:key="cloud_storage_vk_template"
+                    android:summary="@string/summary_vk_outbound_template"
+                    android:title="@string/title_vk_outbound_template" />
+                <EditTextPreference
+                    android:defaultValue="5"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:inputType="number"
+                    android:key="cloud_storage_vk_min_interval"
+                    android:summary="@string/summary_vk_outbound_min_interval"
+                    android:title="@string/title_vk_outbound_min_interval" />
+                <ListPreference
+                    android:defaultValue="always"
+                    android:dependency="cloud_storage_vk_enable"
+                    android:entries="@array/vk_outbound_trigger_entries"
+                    android:entryValues="@array/vk_outbound_trigger_values"
+                    android:key="cloud_storage_vk_trigger"
+                    android:title="@string/title_vk_outbound_trigger" />
+                <EditTextPreference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:inputType="numberDecimal"
+                    android:key="cloud_storage_vk_trigger_low"
+                    android:title="@string/title_vk_outbound_trigger_low" />
+                <EditTextPreference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:inputType="numberDecimal"
+                    android:key="cloud_storage_vk_trigger_high"
+                    android:title="@string/title_vk_outbound_trigger_high" />
+                <Preference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:key="cloud_storage_vk_status"
+                    android:title="@string/title_vk_outbound_status" />
+                <Preference
+                    android:dependency="cloud_storage_vk_enable"
+                    android:key="cloud_storage_vk_test_send"
+                    android:title="@string/title_vk_outbound_test_send" />
+            </PreferenceScreen>
+
+            <PreferenceScreen
                 android:key="cloud_storage_web_deposit"
                 android:summary="Simple batch API currently used for diagnostics"
                 android:title="Web Deposit">

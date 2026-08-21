@@ -15,6 +15,7 @@ import com.eveningoutpost.dexdrip.utilitymodels.pebble.PebbleUtil;
 import com.eveningoutpost.dexdrip.utilitymodels.pebble.PebbleWatchSync;
 import com.eveningoutpost.dexdrip.healthconnect.HealthGamut;
 import com.eveningoutpost.dexdrip.healthconnect.HealthConnectEntry;
+import com.eveningoutpost.dexdrip.cloud.vk.VkOutbound;
 import com.eveningoutpost.dexdrip.tidepool.TidepoolEntry;
 import com.eveningoutpost.dexdrip.ui.LockScreenWallPaper;
 import com.eveningoutpost.dexdrip.utils.BgToSpeech;
@@ -66,6 +67,7 @@ public class NewDataObserver {
         LockScreenWallPaper.setIfEnabled();
         sendToHealthConnect(bgReading);
         TidepoolEntry.newData();
+        VkOutbound.enqueueGlucose(bgReading);
 
     }
 

@@ -49,10 +49,13 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.text.method.DigitsKeyListener;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.bytehamster.lib.preferencesearch.SearchConfiguration;
@@ -75,6 +78,10 @@ import com.eveningoutpost.dexdrip.cgm.webfollow.Cpref;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.auth.CareLinkAuthenticator;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.auth.CareLinkCredentialStore;
 import com.eveningoutpost.dexdrip.cloud.jamcm.Pusher;
+import com.eveningoutpost.dexdrip.cloud.vk.VkGlucoseThresholds;
+import com.eveningoutpost.dexdrip.cloud.vk.VkOutbound;
+import com.eveningoutpost.dexdrip.cloud.vk.VkOutboundDestination;
+import com.eveningoutpost.dexdrip.cloud.vk.VkOutboundPrefs;
 import com.eveningoutpost.dexdrip.g5model.DexSyncKeeper;
 import com.eveningoutpost.dexdrip.g5model.Ob1G5StateMachine;
 import com.eveningoutpost.dexdrip.healthconnect.HealthConnectEntry;
@@ -110,6 +117,7 @@ import com.eveningoutpost.dexdrip.utilitymodels.Experience;
 import com.eveningoutpost.dexdrip.utilitymodels.Inevitable;
 import com.eveningoutpost.dexdrip.utilitymodels.Intents;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
+import com.eveningoutpost.dexdrip.utilitymodels.Unitized;
 import com.eveningoutpost.dexdrip.utilitymodels.ShotStateStore;
 import com.eveningoutpost.dexdrip.utilitymodels.SpeechUtil;
 import com.eveningoutpost.dexdrip.utilitymodels.UpdateActivity;
@@ -1146,6 +1154,15 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             bindPreferenceSummaryToValue(findPreference("cloud_storage_mongodb_uri"));
             bindPreferenceSummaryToValue(findPreference("cloud_storage_mongodb_collection"));
             bindPreferenceSummaryToValue(findPreference("cloud_storage_mongodb_device_status_collection"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_name"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_preset"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_recipients"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_url"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_api_version"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_min_interval"));
+            bindPreferenceSummaryToValue(findPreference("cloud_storage_vk_trigger"));
+            wireVkGlucoseThreshold((EditTextPreference) findPreference("cloud_storage_vk_trigger_low"), true);
+            wireVkGlucoseThreshold((EditTextPreference) findPreference("cloud_storage_vk_trigger_high"), false);
 
             addPreferencesFromResource(R.xml.pref_advanced_settings);
             addPreferencesFromResource(R.xml.xdrip_plus_prefs);
@@ -1380,6 +1397,40 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                         });
             } catch (Exception e) {
                 UserError.Log.e(TAG,"Could not attach listener for tidepool prefs: " + e);
+            }
+
+            try {
+                final Preference vkStatus = findPreference("cloud_storage_vk_status");
+                if (vkStatus != null) {
+                    vkStatus.setSummary(VkOutbound.statusSummary());
+                }
+                final Preference vkTestSend = findPreference("cloud_storage_vk_test_send");
+                if (vkTestSend != null) {
+                    vkTestSend.setOnPreferenceClickListener(preference -> {
+                        Inevitable.task("vk-outbound-test", 200, VkOutbound::sendTest);
+                        return false;
+                    });
+                }
+                final Preference vkPreset = findPreference("cloud_storage_vk_preset");
+                if (vkPreset != null) {
+                    vkPreset.setOnPreferenceChangeListener((preference, newValue) -> {
+                        final String template = VkOutboundDestination.defaultTemplateFor(String.valueOf(newValue));
+                        Pref.setString(VkOutboundPrefs.TEMPLATE, template);
+                        final EditTextPreference templatePref = (EditTextPreference) findPreference("cloud_storage_vk_template");
+                        if (templatePref != null) {
+                            templatePref.setText(template);
+                            templatePref.setSummary(template);
+                        }
+                        if (preference instanceof ListPreference) {
+                            final ListPreference listPreference = (ListPreference) preference;
+                            final int index = listPreference.findIndexOfValue(String.valueOf(newValue));
+                            preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+                        }
+                        return true;
+                    });
+                }
+            } catch (Exception e) {
+                UserError.Log.e(TAG, "Could not attach listener for VK prefs: " + e);
             }
 
 
@@ -3103,6 +3154,94 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             );
         }
 
+        void refreshVkThresholdPrefs() {
+            final boolean usingMgdl = Unitized.usingMgDl();
+            refreshVkThresholdPref((EditTextPreference) findPreference(VkOutboundPrefs.TRIGGER_LOW), usingMgdl);
+            refreshVkThresholdPref((EditTextPreference) findPreference(VkOutboundPrefs.TRIGGER_HIGH), usingMgdl);
+        }
+
+        private void refreshVkThresholdPref(EditTextPreference preference, boolean usingMgdl) {
+            if (preference == null) {
+                return;
+            }
+            String stored = this.prefs.getString(preference.getKey(), preference.getText());
+            if (stored == null) {
+                stored = "";
+            }
+            preference.setText(stored);
+            applyVkThresholdPresentation(preference, stored, usingMgdl);
+        }
+
+        private void wireVkGlucoseThreshold(EditTextPreference preference, boolean low) {
+            if (preference == null) {
+                return;
+            }
+            final boolean usingMgdl = Unitized.usingMgDl();
+            VkOutboundPrefs.migrateThresholdsToUserUnits(usingMgdl);
+            String stored = preference.getText();
+            if (VkOutboundDestination.isBlank(stored)) {
+                stored = this.prefs.getString(preference.getKey(), "");
+            }
+            if (VkOutboundDestination.isBlank(stored)) {
+                stored = low
+                        ? VkGlucoseThresholds.defaultLowDisplay(usingMgdl)
+                        : VkGlucoseThresholds.defaultHighDisplay(usingMgdl);
+                preference.setText(stored);
+                Pref.setString(preference.getKey(), stored);
+            }
+            applyVkThresholdPresentation(preference, stored, usingMgdl);
+            attachVkDecimalFilter(preference);
+            preference.setOnPreferenceChangeListener((pref, newValue) -> {
+                final boolean nowMgdl = Unitized.usingMgDl();
+                final String normalized = VkGlucoseThresholds.normalizeDecimal(String.valueOf(newValue));
+                if (normalized.isEmpty()) {
+                    return false;
+                }
+                try {
+                    Double.parseDouble(normalized);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+                final double mgdl = VkGlucoseThresholds.parseToMgdl(normalized, nowMgdl, -1);
+                if (mgdl > MAX_GLUCOSE_INPUT || mgdl < MIN_GLUCOSE_INPUT) {
+                    JoH.static_toast_long(xdrip.gs(R.string.the_value_must_be_between_min_and_max,
+                            unitsConvert2Disp(nowMgdl, MIN_GLUCOSE_INPUT),
+                            unitsConvert2Disp(nowMgdl, MAX_GLUCOSE_INPUT)));
+                    return false;
+                }
+                Pref.setString(pref.getKey(), normalized);
+                ((EditTextPreference) pref).setText(normalized);
+                applyVkThresholdPresentation((EditTextPreference) pref, normalized, nowMgdl);
+                return false;
+            });
+        }
+
+        private static void applyVkThresholdPresentation(EditTextPreference preference, String value, boolean usingMgdl) {
+            final String unit = VkGlucoseThresholds.unitLabel(usingMgdl);
+            final int titleRes = VkOutboundPrefs.TRIGGER_LOW.equals(preference.getKey())
+                    ? R.string.title_vk_outbound_trigger_low
+                    : R.string.title_vk_outbound_trigger_high;
+            preference.setTitle(xdrip.gs(titleRes) + " (" + unit + ")");
+            preference.setSummary(value + "  " + unit);
+        }
+
+        private static void attachVkDecimalFilter(EditTextPreference preference) {
+            try {
+                final EditText editText = preference.getEditText();
+                if (editText == null) {
+                    return;
+                }
+                editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                editText.setKeyListener(DigitsKeyListener.getInstance("0123456789.,"));
+                editText.setFilters(new InputFilter[]{
+                        (source, start, end, dest, dstart, dend) ->
+                                VkGlucoseThresholds.filterTypedDecimal(source, start, end, dest, dstart, dend)
+                });
+            } catch (Exception e) {
+                UserError.Log.e(TAG, "Could not attach VK decimal filter: " + e);
+            }
+        }
+
 
         // Will update the widget if any setting relevant to the widget gets changed.
         private static class WidgetListener implements Preference.OnPreferenceChangeListener {
@@ -3187,12 +3326,14 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     Profile.invalidateProfile();
                 }
             }
+            VkOutboundPrefs.convertThresholdsForUnitsChange(preferences, newValue.toString().equals("mgdl"));
             if (preference != null) preference.setSummary(newValue.toString());
             if (allPrefsFragment != null) {
                 allPrefsFragment.setSummary("highValue");
                 allPrefsFragment.setSummary("lowValue");
                 allPrefsFragment.setSummary("persistent_high_threshold");
                 allPrefsFragment.setSummary("forecast_low_threshold");
+                allPrefsFragment.refreshVkThresholdPrefs();
             }
             if (profile_insulin_sensitivity_default != null) {
                 Log.d(TAG, "refreshing profile insulin sensitivity default display");

@@ -572,4 +572,25 @@
         <item>5</item>
     </string-array>
 
+    <string-array name="vk_outbound_preset_entries">
+        <item>@string/vk_outbound_preset_text</item>
+        <item>@string/vk_outbound_preset_glucowatch</item>
+    </string-array>
+    <string-array name="vk_outbound_preset_values">
+        <item>vk_messages</item>
+        <item>glucowatch_vk</item>
+    </string-array>
+    <string-array name="vk_outbound_trigger_entries">
+        <item>@string/vk_outbound_trigger_always</item>
+        <item>@string/vk_outbound_trigger_at_or_below</item>
+        <item>@string/vk_outbound_trigger_at_or_above</item>
+        <item>@string/vk_outbound_trigger_outside</item>
+    </string-array>
+    <string-array name="vk_outbound_trigger_values">
+        <item>always</item>
+        <item>at_or_below</item>
+        <item>at_or_above</item>
+        <item>outside_range</item>
+    </string-array>
+
 </resources>
