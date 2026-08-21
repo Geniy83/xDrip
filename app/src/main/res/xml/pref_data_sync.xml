@@ -396,7 +396,6 @@
                     android:targetPackage="@string/local_target_package" />
             </Preference>
             <EditTextPreference
-                android:dependency="bluetooth_meter_enabled"
                 android:key="satellite_meter_pin"
                 android:summary="@string/satellite_meter_pin_summary"
                 android:title="@string/satellite_meter_pin_title" />
