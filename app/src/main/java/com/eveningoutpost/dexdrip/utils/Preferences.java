@@ -44,7 +44,6 @@ import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -65,13 +64,13 @@ import com.eveningoutpost.dexdrip.BasePreferenceActivity;
 import com.eveningoutpost.dexdrip.GcmActivity;
 import com.eveningoutpost.dexdrip.Home;
 import com.eveningoutpost.dexdrip.NFCReaderX;
-import com.eveningoutpost.dexdrip.ParakeetHelper;
 import com.eveningoutpost.dexdrip.R;
 import com.eveningoutpost.dexdrip.WidgetUpdateService;
 import com.eveningoutpost.dexdrip.alert.Registry;
 import com.eveningoutpost.dexdrip.calibrations.PluggableCalibration;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.CareLinkFollowService;
 import com.eveningoutpost.dexdrip.cgm.carelinkfollow.auth.CareLinkAuthType;
+import com.eveningoutpost.dexdrip.cgm.dex.TxIdHelper;
 import com.eveningoutpost.dexdrip.cgm.nsfollow.NightscoutFollow;
 import com.eveningoutpost.dexdrip.cgm.sharefollow.ShareFollowService;
 import com.eveningoutpost.dexdrip.cgm.webfollow.Cpref;
@@ -84,9 +83,13 @@ import com.eveningoutpost.dexdrip.cloud.vk.VkOutboundDestination;
 import com.eveningoutpost.dexdrip.cloud.vk.VkOutboundPrefs;
 import com.eveningoutpost.dexdrip.g5model.DexSyncKeeper;
 import com.eveningoutpost.dexdrip.g5model.Ob1G5StateMachine;
+import com.eveningoutpost.dexdrip.cloud.nightlite.NightLiteClient;
+import com.eveningoutpost.dexdrip.cloud.nightlite.NightLiteEntry;
+import com.eveningoutpost.dexdrip.cloud.nightlite.NightLiteQR;
 import com.eveningoutpost.dexdrip.healthconnect.HealthConnectEntry;
 import com.eveningoutpost.dexdrip.healthconnect.HealthGamut;
 import com.eveningoutpost.dexdrip.insulin.inpen.InPenEntry;
+import com.eveningoutpost.dexdrip.nocturne.NocturneConnectHelper;
 import com.eveningoutpost.dexdrip.models.DesertSync;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.Profile;
@@ -94,14 +97,12 @@ import com.eveningoutpost.dexdrip.models.UserError;
 import com.eveningoutpost.dexdrip.models.UserError.ExtraLogTags;
 import com.eveningoutpost.dexdrip.models.UserError.Log;
 import com.eveningoutpost.dexdrip.models.UserNotification;
-import com.eveningoutpost.dexdrip.plugin.Dialog;
 import com.eveningoutpost.dexdrip.profileeditor.ProfileEditor;
 import com.eveningoutpost.dexdrip.receiver.InfoContentProvider;
 import com.eveningoutpost.dexdrip.services.ActivityRecognizedService;
 import com.eveningoutpost.dexdrip.services.BluetoothGlucoseMeter;
 import com.eveningoutpost.dexdrip.services.DexCollectionService;
 import com.eveningoutpost.dexdrip.services.G5BaseService;
-import com.eveningoutpost.dexdrip.services.Ob1G5CollectionService;
 import com.eveningoutpost.dexdrip.services.PlusSyncService;
 import com.eveningoutpost.dexdrip.services.UiBasedCollector;
 import com.eveningoutpost.dexdrip.services.broadcastservice.BroadcastService;
@@ -474,7 +475,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     editor.putString("cloud_storage_api_base", Joiner.on(' ').join(barcode.getApiUris()));
                     editor.apply();
                 } else {
-                    prefs.edit().putBoolean("cloud_storage_api_enable", false).apply();
+                  //  prefs.edit().putBoolean("cloud_storage_api_enable", false).apply(); // no need to disable
                 }
             }
             if (barcode.hasApiConfig()) {
@@ -483,7 +484,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                 editor.putString("cloud_storage_api_base", Joiner.on(' ').join(barcode.getApiUris()));
                 editor.apply();
             } else {
-                prefs.edit().putBoolean("cloud_storage_api_enable", false).apply();
+               // prefs.edit().putBoolean("cloud_storage_api_enable", false).apply(); // no need to disable
             }
 
             if (barcode.hasMqttConfig()) {
@@ -505,10 +506,25 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     }
                 }
             } else {
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean("cloud_storage_mqtt_enable", false);
-                editor.apply();
+              //  SharedPreferences.Editor editor = prefs.edit();
+               // editor.putBoolean("cloud_storage_mqtt_enable", false); // no need to disable
+              //  editor.apply();
             }
+
+            try {
+                final NightLiteQR barcode2 = new NightLiteQR(scanContents);
+                if (barcode2.hasNsLiteConfig()) {
+                    UserError.Log.d(TAG, "NightLite QR code detected");
+                    if (NightLiteEntry.setApi(barcode2.getApiUris())) {
+                        JoH.static_toast_long("NightLite enabled");
+                        NightLiteClient.doUpload();
+                    }
+                }
+            } catch (Exception e) {
+                UserError.Log.e(TAG, "Error processing NightLite QR code: " + e);
+            }
+
+
         } else if (scanFormat.equals("CODE_128")) {
             Log.d(TAG, "Setting serial number to: " + scanContents);
             prefs.edit().putString("share_key", scanContents).apply();
@@ -1164,6 +1180,18 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             wireVkGlucoseThreshold((EditTextPreference) findPreference("cloud_storage_vk_trigger_low"), true);
             wireVkGlucoseThreshold((EditTextPreference) findPreference("cloud_storage_vk_trigger_high"), false);
 
+            final Preference nocturneConnectPref = findPreference("nocturne_connect");
+            if (nocturneConnectPref != null) {
+                nocturneConnectPref.setOnPreferenceClickListener(preference -> {
+                    NocturneConnectHelper.startConnectFlow(getActivity());
+                    return true;
+                });
+            }
+            final Preference nocturneUrlPref = findPreference("nocturne_instance_url");
+            if (nocturneUrlPref != null) {
+                bindPreferenceSummaryToValue(nocturneUrlPref);
+            }
+
             addPreferencesFromResource(R.xml.pref_advanced_settings);
             addPreferencesFromResource(R.xml.xdrip_plus_prefs);
 
@@ -1309,17 +1337,6 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             profile_carb_absorption_default.setTitle(format_carb_absorption_rate(profile_carb_absorption_default.getTitle().toString(), this.prefs.getString("profile_carb_absorption_default", "")));
 
 
-            refresh_extra_items();
-            findPreference("plus_extra_features").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Home.invalidateMenu = true; // force redraw
-                    refresh_extra_items();
-
-                    return true;
-                }
-            });
-
             final Preference crash_reports = findPreference("enable_crashlytics");
             crash_reports.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -1436,8 +1453,8 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
 
             final Preference nsFollowDownload = findPreference("nsfollow_download_treatments_screen");
             final Preference nsFollowUrl = findPreference("nsfollow_url");
+            final Preference nsFollowSamplePeriod = findPreference("nsfollow_sample_period_in_minutes"); // Show the Nightscout follow sample period setting only when NS follow is the data source
             final Preference nsFollowLag = findPreference("nsfollow_lag"); // Show the Nightscout follow wake delay setting only when NS follow is the data source
-            bindPreferenceSummaryToValue(findPreference("nsfollow_lag")); // Show the selected value as summary
             try {
                 nsFollowUrl.setOnPreferenceChangeListener((preference, newValue) -> {
                     NightscoutFollow.resetInstance();
@@ -1907,6 +1924,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                 try {
                     collectionCategory.removePreference(nsFollowUrl);
                     collectionCategory.removePreference(nsFollowDownload);
+                    collectionCategory.removePreference(nsFollowSamplePeriod);
                     collectionCategory.removePreference(nsFollowLag);
                 } catch (Exception e) {
                     //
@@ -2013,6 +2031,15 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     return true;
                 });
             } catch (NullPointerException e) {
+                //
+            }
+            try {
+                findPreference("ongoing_notification_aodchipstyle").setOnPreferenceChangeListener((preference, newValue) -> {
+                    UserError.Log.d(TAG,"Restarting collector due to notification style change");
+                    CollectionServiceStarter.restartCollectionServiceBackground();
+                    return true;
+                });
+            } catch (Exception e) {
                 //
             }
 
@@ -2277,7 +2304,6 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     preference.setSummary(newValue.toString());
-                    ParakeetHelper.notifyOnNextCheckin(true);
                     return true;
                 }
             });
@@ -2516,7 +2542,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
             });
 
             bindPreferenceSummaryToValue(transmitterId); // duplicated below but this sets initial value
-            transmitterId.getEditText().setFilters(new InputFilter[]{new InputFilter.AllCaps()}); // TODO filter O ?
+            transmitterId.getEditText().setFilters(new InputFilter[]{new InputFilter.AllCaps()});
             transmitterId.getEditText().post(() -> {
                 try {
                     // position to end of input text
@@ -2525,34 +2551,27 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     UserError.Log.d(TAG, "Could not set selection for transmitter id: " + e);
                 }
             });
-            transmitterId.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    val activity = getActivity();
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Dialog.askIfNeeded(activity, (String)newValue);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                //
-                            }
-                            Log.d(TAG, "Trying to restart collector due to tx id change");
+            TxIdHelper.attachValidator(transmitterId.getEditText());
+            transmitterId.setOnPreferenceChangeListener((preference, newValue) -> {
 
-                            clearDataWhenTransmitterIdEntered((String)newValue);
+                TxIdHelper.handleTransmitterEntry((String)newValue, getActivity(), transmitterId1 -> {
+                    Pref.setString(preference.getKey(), transmitterId1); // save the accepted value
+                    ((EditTextPreference)preference).setText(transmitterId1); // update active value
 
-                            CollectionServiceStarter.restartCollectionService(xdrip.getAppContext());
-                        }
+                    new Thread(() -> { // TODO this logic is duplicated and could be centralized
+                        Log.d(TAG, "Trying to restart collector due to tx id change");
+                        clearDataWhenTransmitterIdEntered(transmitterId1);
+                        CollectionServiceStarter.restartCollectionServiceBackground();
                     }).start();
-                    sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, newValue);
 
-                    return true;
-                }
+                    sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, transmitterId1);
+                });
+
+                return false; // don't allow by default - handled by callback
             });
 
             // when changing collection method
-                    collectionMethod.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            collectionMethod.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
 
@@ -2634,6 +2653,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     if (collectionType == DexCollectionType.NSFollow) {
                         collectionCategory.addPreference(nsFollowUrl);
                         collectionCategory.addPreference(nsFollowDownload);
+                        collectionCategory.addPreference(nsFollowSamplePeriod);
                         collectionCategory.addPreference(nsFollowLag);
                     }
 
@@ -2679,7 +2699,7 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                             if (AllPrefsFragment.this.prefs.getBoolean("plus_follow_master",false))
                             {
                                 AllPrefsFragment.this.prefs.edit().putBoolean("plus_follow_master", false).apply();
-                                JoH.static_toast(preference.getContext(),"Turning off xDrip+ Sync Master for Followers!",Toast.LENGTH_LONG);
+                                JoH.static_toast(preference.getContext(),"Turning off xDrip Sync Master for Followers!",Toast.LENGTH_LONG);
                             }
                             GcmActivity.requestBGsync();
                         }
@@ -3060,20 +3080,6 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     return true;
                 }
             });
-        }
-
-        private void refresh_extra_items() {
-            try {
-                if (this.prefs == null) return;
-                if (!this.prefs.getBoolean("plus_extra_features", false)) {
-                    // getPreferenceScreen().removePreference(findPreference("plus_follow_master"));
-
-                } else {
-                    // getPreferenceScreen().addPreference(findPreference("plus_follow_master"));
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Got exception in refresh extra: " + e.toString());
-            }
         }
 
         public void jumpToScreen(final String screenKey) {

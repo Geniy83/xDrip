@@ -184,6 +184,8 @@
     <string name="share_config_via_qr_code">Udostepnij konfiguracje poprzez kod QR</string>
     <string name="check_for_updated_version">Sprawdź czy jest nowa wersja</string>
     <string name="current_version_is_up_to_date">Brak aktualizacji dla wybranego kanału</string>
+    <string name="title_dialog_check_for_update">Brak aktualizacji na kanale %1$s</string>
+    <string name="message_dialog_check_for_update">Na innych kanałach może istnieć nowsza wersja.</string>
     <string name="send_feedback_to_developer">Prześlij uwagi do programisty</string>
     <string name="home_screen">Ekran główny</string>
     <string name="event_logs">Dzienniki zdarzeń</string>
@@ -644,6 +646,8 @@
     <string name="libre_use_smoothed_data_summary">Użyj średniej z 5 punktów, aby uzyskać bardziej gładkie dane.</string>
     <string name="libre_use_smoothed_data_title">Wygładź dane z Libre.</string>
     <string name="retrieve_blukon_history_title">Pobierz historię Libre</string>
+    <string name="summary_nsfollow_sample_period">Domyślnie: 5 min\nobecnie: %s</string>
+    <string name="title_sample_period">Okres próbkowania</string>
     <string name="retrieve_blukon_history_summary">Pobierz brakującą historię z urządzenia BluCon podczas ponownego łączenia z czujnikiem.</string>
     <string name="interpret_share_raw">Jeśli używasz Share, xDrip wyświetli wartości, gdy są one normalnie ukryte w odbiorniku.</string>
     <string name="interpret_raw">Interpretuj surowe wartości glukozy</string>
@@ -940,6 +944,7 @@
     <string name="use_confict_msg_glimp">Możesz dostosować ustawienia Glimp: opcje -&gt; urządzenia -&gt; odznacz opcję Bluetooth</string>
     <string name="eng_mode_is_on">Tryb inżynieryjny jest włączony. Proszę go wyłączyć, chyba że jesteś pewien, że go potrzebujesz, ponieważ może spowodować nieoczekiwane zachowanie.</string>
     <string name="yes">Tak</string>
+    <string name="enable">Włącz</string>
     <string name="xdrip_compatible_features">Funkcje xDrip+ %s</string>
     <string name="garmin">Garmin</string>
     <string name="fitbit">Fitbit</string>
@@ -1230,6 +1235,11 @@
     <string name="summary_tidepool_upload_no_treatment">Przesyłaj tylko dane z CGM, aby uniknąć duplikatów przesłanych z pompy</string>
     <string name="title_tidepool_upload_no_treatment">Nie wysyłaj zabiegów</string>
     <string name="title_tidepool">Tidepool</string>
+    <!-- Nocturne connect flow -->
+    <string name="title_nocturne_upload_treatments">Prześlij zabiegi</string>
+    <string name="title_nocturne_use_mobile">Użyj transmisji danych</string>
+    <!-- NocturneConnectActivity (deep link receiver) -->
+    <!-- NocturneConnectHelper (device flow UI) -->
     <string name="show_help">Pokaż pomoc</string>
     <string name="load_save_settings_on_sdcard">Załaduj / Zapisz ustawienia na karcie Sd</string>
     <string name="delete_all_bg_readings">Usuń WSZYSTKIE odczyty glikemii</string>
@@ -1326,6 +1336,7 @@
     <string name="title_nsfollow_url">Adres URL do obserwowania Nightscout</string>
     <string name="summary_nsfollow_download_treatments">Pobierz również zabiegi z Nightscout jako obserwator</string>
     <string name="title_nsfollow_download_treatments">Pobieraj zabiegi</string>
+    <string name="summary_nsfollow_lag">Domyślnie: 0\nobecnie: %s</string>
     <string name="title_nsfollow_lag">Odstęp czasowy śledzenia Nightscout</string>
     <!-- Maybe we can use them later?
     <string name="title_clfollow_user">CareLink Username</string>
@@ -1922,6 +1933,40 @@
     <string name="system_sound_alarm">Dźwięk/Alarm systemowy</string>
     <string name="custom_sound_alarm">Własny dźwięk/Alarm</string>
     <string name="default_xdrip_sound">Domyślny dźwięk xDrip</string>
+    <string name="turn_feature_off_on">Wyłącz/włącz funkcję</string>
+    <string name="glupro_bluetooth_scanning">Skanowanie Bluetooth</string>
+    <string name="need_bluetooth_permissions">Potrzebne uprawnienia do korzystania z Bluetooth</string>
+    <string name="glupro_scan_again">Skanuj ponownie</string>
+    <string name="glupro_sensor_malfunction">Awaria czujnika</string>
+    <string name="glupro_battery_low">Słaba bateria</string>
+    <string name="glupro_session_stopped">Sesja zatrzymana</string>
+    <string name="glupro_calibration_recommended">Kalibracja zalecana</string>
+    <string name="glupro_calibration_required">Kalibracja wymagana</string>
+    <string name="glupro_value_too_low">Zbyt niska wartość</string>
+    <string name="glupro_value_too_high">Zbyt wysoka wartość</string>
+    <string name="glupro_sensor_alert">Alarm czujnika</string>
+    <string name="glupro_sensor_fault">Błąd czujnika</string>
+    <string name="glupro_temperature_too_high">Zbyt wysoka temperatura</string>
+    <string name="glupro_temperature_too_low">Zbyt niska temperatura</string>
     <string name="glupro_disconnected">Rozłączony</string>
     <string name="glupro_connected">Połączony</string>
+    <string name="glupro_configuring">Konfigurowanie</string>
+    <string name="glupro_configured">Skonfigurowano</string>
+    <string name="glupro_connect_failed">Połączenie nie powiodło się</string>
+    <string name="glupro_scanning_error">Błąd skanowania</string>
+    <string name="glupro_insufficient_permissions">Niewystarczające uprawnienia</string>
+    <string name="glupro_bluetooth_disabled">Bluetooth wyłączony</string>
+    <string name="glupro_scan_stopped">Zatrzymano skanowanie</string>
+    <string name="glupro_model_number">Numer modelu</string>
+    <string name="glupro_start_time">Włącz</string>
+    <string name="glupro_sensor_serial">Numer seryjny czujnika</string>
+    <string name="glupro_device">Urządzenie</string>
+    <string name="need_bluetooth_permission">Potrzebne uprawnienia do korzystania z Bluetooth</string>
+    <string name="ob1_sensor_stopped">Czujnik zatrzymany</string>
+    <string name="invalid_transmitter_id">Niepoprawny kod identyfikacyjny transmitera</string>
+    <string name="you_entered">Wprowadziłeś:</string>
+    <string name="fixed_version">Poprawiona wersja:</string>
+    <string name="click">Klik</string>
+    <string name="to_use_this_instead">aby użyć tego zamiast?</string>
+    <string name="the_transmitter_id_you_have_entered_is_incorrect">Wprowadzony przez Ciebie identyfikator nadajnika lub kod parowania jest nieprawidłowy i nie będzie działał.\n\nSprawdź wprowadzone wartości i spróbuj ponownie.</string>
 </resources>

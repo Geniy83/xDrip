@@ -919,6 +919,7 @@
     <string name="use_confict_msg_glimp">Glimp ayarlarını yapabilirsiniz: seçenekler -&gt; cihazlar -&gt; Bluetooth seçeneğini kaldır</string>
     <string name="eng_mode_is_on">Mühendislik modu etkinleştirildi. Beklenmeyen davranışlara neden olabileceğinden, ihtiyacınız olduğundan emin değilseniz lütfen devre dışı bırakın.</string>
     <string name="yes">Evet</string>
+    <string name="enable">Etkinleştir</string>
     <string name="xdrip_compatible_features">xDrip + %s özellikleri</string>
     <string name="garmin">Garmin</string>
     <string name="fitbit">Fitbit</string>
@@ -1199,6 +1200,11 @@
     <string name="summary_tidepool_dev_servers">Etkinleştirilirse, yüklemeler normal https://app.tidepool.org/ yerine https://int-app.tidepool.org adresine gider</string>
     <string name="title_tidepool_dev_servers">Entegrasyon (test) sunucularını kullanın</string>
     <string name="title_tidepool">Tidepool</string>
+    <!-- Nocturne connect flow -->
+    <string name="title_nocturne_upload_treatments">Tedavileri yükle</string>
+    <string name="title_nocturne_use_mobile">Mobil veri kullan</string>
+    <!-- NocturneConnectActivity (deep link receiver) -->
+    <!-- NocturneConnectHelper (device flow UI) -->
     <string name="show_help">Yardımı Göster</string>
     <string name="load_save_settings_on_sdcard">SD karttan Yükleme / Kaydetme</string>
     <string name="delete_all_bg_readings">Tüm KŞ okumalarını sil</string>
@@ -1831,4 +1837,5 @@
     <string name="volume_profile_high">Yüksek Kan Şekeri değerleri</string>
     <string name="glupro_disconnected">Bağlı değil</string>
     <string name="glupro_connected">Bağlandı</string>
+    <string name="glupro_start_time">Açılma Zamanı</string>
 </resources>

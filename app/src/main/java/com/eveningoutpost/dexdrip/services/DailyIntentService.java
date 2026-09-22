@@ -132,7 +132,7 @@ public class DailyIntentService extends IntentService {
                 }
 
                 try {
-                    final int bg_retention_days = Pref.getStringToInt("retention_days_bg_reading", 0);
+                    final int bg_retention_days = Pref.getStringToInt("retention_days_bg_reading", 180);
                     if (bg_retention_days > 0 && !Pref.getBooleanDefaultFalse("never_cleanup_dbs_daily")) {
                         Log.e(TAG, "BG Retention is removing some days from database");
                         BgReading.cleanup(bg_retention_days);

@@ -11,7 +11,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.provider.BaseColumns;
 
 import com.activeandroid.Model;
@@ -1012,16 +1012,10 @@ public class BgReading extends Model implements ShareUploadableBg {
         return list;
     }
 
+    // A candidate reading is rejected if its timestamp falls within this margin of an existing reading.
+    static long readingProximityMarginMs = DexCollectionType.getCurrentSamplePeriod() * 4 / 5;
     public static BgReading readingNearTimeStamp(long startTime) {
-        if(DexCollectionType.getCurrentSamplePeriod() == 59_000) {
-            long margin = (59 * 1000);
-            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
-            return readingNearTimeStamp(startTime, margin);
-        } else {
-            long margin = (4 * 60 * 1000);
-            Log.i(TAG, "Время из метода readingNearTimeStamp = " + margin);
-            return readingNearTimeStamp(startTime, margin);
-        }
+        return readingNearTimeStamp(startTime, readingProximityMarginMs);
     }
 
     public static BgReading readingNearTimeStamp(long startTime, final long margin) {

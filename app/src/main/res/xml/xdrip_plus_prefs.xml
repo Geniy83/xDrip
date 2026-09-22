@@ -367,21 +367,25 @@
                     android:title="@string/title_enlarge_fonts_on_large_screens" />
             </PreferenceScreen>
 
-            <SwitchPreference
-                android:defaultValue="false"
-                android:key="force_english"
-                android:summary="@string/using_local_language"
-                android:summaryOn="@string/forcing_alternate_language"
-                android:switchTextOff="@string/short_off_text_for_switches"
-                android:switchTextOn="@string/short_on_text_for_switches"
-                android:title="@string/force_english_text" />
-            <ListPreference
-                android:defaultValue="en"
-                android:entries="@array/LocaleChoices"
-                android:entryValues="@array/LocaleChoicesValues"
-                android:key="forced_language"
-                android:summary="@string/need_alternate_language"
-                android:title="@string/chosse_language" />
+            <PreferenceScreen
+                android:key="xdrip_language_settings"
+                android:title="@string/title_language">
+                <SwitchPreference
+                    android:defaultValue="false"
+                    android:key="force_english"
+                    android:summary="@string/using_local_language"
+                    android:summaryOn="@string/forcing_alternate_language"
+                    android:switchTextOff="@string/short_off_text_for_switches"
+                    android:switchTextOn="@string/short_on_text_for_switches"
+                    android:title="@string/force_english_text" />
+                <ListPreference
+                    android:defaultValue="en"
+                    android:entries="@array/LocaleChoices"
+                    android:entryValues="@array/LocaleChoicesValues"
+                    android:key="forced_language"
+                    android:summary="@string/need_alternate_language"
+                    android:title="@string/chosse_language" />
+            </PreferenceScreen>
 
             <SwitchPreference
                 android:defaultValue="true"
@@ -560,7 +564,7 @@
                         android:key="autopan"
                         android:title=" ">
                         <CheckBoxPreference
-                            android:defaultValue="false"
+                            android:defaultValue="true"
                             android:key="auto_y_pan"
                             android:summary="@string/summary_auto_y_pan"
                             android:title="@string/title_auto_y_pan" />
@@ -594,11 +598,6 @@
                 android:key="public_notifications"
                 android:summary="@string/summary_public_notifications"
                 android:title="@string/title_public_notifications" />
-            <CheckBoxPreference
-                android:defaultValue="true"
-                android:key="plus_extra_features"
-                android:summary="@string/show_test_features"
-                android:title="@string/parakeet_and_extra_features" />
             <CheckBoxPreference
                 android:defaultValue="true"
                 android:key="plus_show_reminders"
@@ -653,20 +652,32 @@
                         android:targetClass="com.eveningoutpost.dexdrip.ui.activities.NumberWallPreview"
                         android:targetPackage="@string/local_target_package" />
                 </Preference>
-                <SwitchPreference
+                <CheckBoxPreference
                     android:defaultValue="false"
                     android:key="number_wall_on_lockscreen"
                     android:summary="@string/summary_number_wall_on_lockscreen"
-                    android:switchTextOff="@string/short_off_text_for_switches"
-                    android:switchTextOn="@string/short_on_text_for_switches"
-                    android:title="@string/title_number_wall_on_lockscreen" />
+                    android:title="@string/enable" />
+
+                <PreferenceCategory
+                    android:key="gap_before_force_text_color"
+                    android:title=" " />
+                <CheckBoxPreference
+                    android:defaultValue="true"
+                    android:key="force_lock_screen_text_color"
+                    android:summary="@string/summary_force_lockscreen_text_color"
+                    android:title="@string/title_force_lockscreen_text_color" />
                 <com.eveningoutpost.dexdrip.utilitymodels.ColorPicker
                     android:defaultValue="#FFEEEEEE"
+                    android:dependency="force_lock_screen_text_color"
                     android:key="color_number_wall"
                     android:title="@string/title_color_number_wall"
                     app:colorpicker_noneSelectedSummaryText="@string/default_color_selected"
                     app:colorpicker_selectNoneButtonText="@string/revert_to_default"
                     app:colorpicker_showHex="false" />
+                <PreferenceCategory
+                    android:key="gap_after_text_color"
+                    android:title=" " />
+
                 <com.eveningoutpost.dexdrip.utilitymodels.ColorPicker
                     android:defaultValue="#FF000000"
                     android:key="color_number_wall_shadow"
@@ -734,22 +745,6 @@
                     android:switchTextOff="@string/short_off_text_for_switches"
                     android:switchTextOn="@string/short_on_text_for_switches"
                     android:title="@string/title_use_number_icon" />
-                <SwitchPreference
-                    android:defaultValue="false"
-                    android:dependency="number_icon_tested"
-                    android:key="use_number_icon_large"
-                    android:summary="@string/summary_use_number_icon_large"
-                    android:switchTextOff="@string/short_off_text_for_switches"
-                    android:switchTextOn="@string/short_on_text_for_switches"
-                    android:title="@string/title_use_number_icon_large" />
-                <SwitchPreference
-                    android:defaultValue="false"
-                    android:dependency="use_number_icon_large"
-                    android:key="number_icon_large_arrow"
-                    android:summary="@string/summary_number_icon_large_arrow"
-                    android:switchTextOff="@string/short_off_text_for_switches"
-                    android:switchTextOn="@string/short_on_text_for_switches"
-                    android:title="@string/title_number_icon_large_arrow" />
             </PreferenceScreen>
             <SwitchPreference
                 android:defaultValue="false"
@@ -961,12 +956,6 @@
                 android:switchTextOff="@string/short_off_text_for_switches"
                 android:switchTextOn="@string/short_on_text_for_switches"
                 android:title="@string/title_libre_whole_house_collector" />
-            <CheckBoxPreference
-                android:defaultValue="true"
-                android:dependency="plus_follow_master"
-                android:key="plus_follow_geolocation"
-                android:summary="@string/send_parakeet_map_location_to_followers"
-                android:title="@string/sync_parakeet_geolocation" />
             <PreferenceScreen
                 android:key="xdrip_plus_remote_snooze_settings"
                 android:summary="@string/remote_snoozes"
@@ -1204,14 +1193,12 @@
                 android:icon="@drawable/ic_mode_edit_grey_600_48dp"
                 android:key="opennov_screen"
                 android:summary="NFC dose downloading of models 6 and Echo Plus"
-                android:title="NovoPen Insulin Pen">
-                <SwitchPreference
+                android:title="@string/title_novopen_insulin_pen">
+                <CheckBoxPreference
                     android:defaultValue="false"
                     android:key="opennov_enabled"
-                    android:summary="NFC dose downloading of models 6 and Echo Plus"
-                    android:switchTextOff="@string/short_off_text_for_switches"
-                    android:switchTextOn="@string/short_on_text_for_switches"
-                    android:title="OpenNov support" />
+                    android:summary="@string/summary_inpen_open_nov_support"
+                    android:title="@string/enable" />
                 <CheckBoxPreference
                     android:defaultValue="true"
                     android:dependency="opennov_enabled"
@@ -1223,15 +1210,15 @@
                     android:defaultValue="false"
                     android:dependency="opennov_enabled"
                     android:key="opennov_remove_priming"
-                    android:summary="Automatically remove priming doses that are the same or less as the priming units value and happen within the priming minutes before the next dose."
-                    android:title="Remove priming doses" />
+                    android:summary="@string/summary_inpen_remove_priming_doses"
+                    android:title="@string/title_inpen_remove_priming_doses" />
 
                 <CheckBoxPreference
                     android:defaultValue="false"
                     android:dependency="opennov_enabled"
                     android:key="opennov_hide_priming"
-                    android:summary="Hide priming dose note entries from graph"
-                    android:title="Hide priming doses" />
+                    android:summary="@string/summary_inpen_hide_priming_doses"
+                    android:title="@string/title_inpen_hide_priming_doses" />
 
                 <EditTextPreference
                     android:dependency="opennov_enabled"
@@ -1239,7 +1226,7 @@
                     android:inputType="numberPassword|textVisiblePassword"
                     android:key="opennov_prime_units"
                     android:maxLength="3"
-                    android:summary="Doses must be less than or equal to this many units to be considered a priming dose"
+                    android:summary="@string/summary_inpen_prime_units"
                     android:title="@string/title_inpen_prime_units" />
 
                 <EditTextPreference
@@ -1248,15 +1235,15 @@
                     android:inputType="numberPassword|textVisiblePassword"
                     android:key="opennov_prime_minutes"
                     android:maxLength="3"
-                    android:summary="How close in minutes a dose must be to be considered a priming dose"
+                    android:summary="@string/summary_inpen_prime_minutes"
                     android:title="@string/title_inpen_prime_minutes" />
 
                 <CheckBoxPreference
                     android:defaultValue="false"
                     android:dependency="engineering_mode"
                     android:key="opennov_debug"
-                    android:summary="Log extra data to aid in debugging. Can slow things down."
-                    android:title="Additional debug logs" />
+                    android:summary="@string/summary_inpen_additional_debug_logs"
+                    android:title="@string/title_inpen_additional_debug_logs" />
             </PreferenceScreen>
 
             <PreferenceScreen

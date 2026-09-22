@@ -30,7 +30,7 @@ import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
-import static com.eveningoutpost.dexdrip.utilitymodels.OkHttpWrapper.enableTls12OnPreLollipop;
+import com.eveningoutpost.dexdrip.utilitymodels.OkHttpWrapper;
 
 
 /**
@@ -77,12 +77,11 @@ public class WebDeposit {
             if (D) {
                 httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             }
-            final OkHttpClient client = enableTls12OnPreLollipop(new OkHttpClient.Builder())
+            final OkHttpClient client = OkHttpWrapper.getClient().newBuilder()
                     .addInterceptor(httpLoggingInterceptor)
                     .addInterceptor(new InfoInterceptor(TAG))
-                    .readTimeout(600, TimeUnit.SECONDS)
                     .connectTimeout(30, TimeUnit.SECONDS)
-                    //          .addInterceptor(new GzipRequestInterceptor())
+                    .readTimeout(600, TimeUnit.SECONDS)
                     .build();
 
             retrofit = new retrofit2.Retrofit.Builder()
@@ -146,7 +145,7 @@ public class WebDeposit {
             return;
         }
 
-        val body = RequestBody.create(MediaType.parse("application/json"), data.toString().getBytes(StandardCharsets.UTF_8));
+        val body = RequestBody.create(data.toString().getBytes(StandardCharsets.UTF_8), MediaType.parse("application/json"));
         Call<DepositReply1> call;
 
         if ("T".equals(type)) {

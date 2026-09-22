@@ -89,7 +89,7 @@ public class GcmActivity extends FauxActivity {
     private static final long MAX_ACK_OUTSTANDING_MS = 3600000;
     private static int recursion_depth = 0;
     private static int last_bridge_battery = -1;
-    private static int last_parakeet_battery = -1;
+    private static int last_uploader_battery = -1;
     private static final int MAX_RECURSION = 30;
     private static final int MAX_QUEUE_SIZE = 300;
     private static final int RELIABLE_MAX_PAYLOAD = 1800;
@@ -392,12 +392,6 @@ public class GcmActivity extends FauxActivity {
         }
     }
 
-    static void sendLocation(final String location) {
-        if (JoH.pratelimit("gcm-plu", 180)) {
-            GcmActivity.sendMessage("plu", location);
-        }
-    }
-
     public static void sendSensorBattery(final int battery) {
         if (JoH.pratelimit("gcm-sbu", 3600)) {
             GcmActivity.sendMessage("sbu", Integer.toString(battery));
@@ -413,11 +407,11 @@ public class GcmActivity extends FauxActivity {
         }
     }
 
-    public static void sendParakeetBattery(final int battery) {
-        if (battery != last_parakeet_battery) {
+    public static void sendUploaderBattery(final int battery) {
+        if (battery != last_uploader_battery) {
             if (JoH.pratelimit("gcm-pbu", 1800)) {
                 GcmActivity.sendMessage("pbu", Integer.toString(battery));
-                last_parakeet_battery = battery;
+                last_uploader_battery = battery;
             }
         }
     }
@@ -516,11 +510,14 @@ public class GcmActivity extends FauxActivity {
         return false;
     }
 
-    public static void sendNanoStatusUpdate(final String prefix, final String json) {
+    // returns true when the update was actually queued for sending
+    public static boolean sendNanoStatusUpdate(final String prefix, final String json) {
         if (JoH.pratelimit("gcm-nscu" + prefix, 30)) {
             UserError.Log.d(TAG, "Sending nano status update: " + prefix + " " + json);
             sendMessage("nscu" + prefix, json);
+            return true;
         }
+        return false;
     }
 
     public static void sendMimeoGraphUpdate(final String json) {
@@ -849,7 +846,7 @@ public class GcmActivity extends FauxActivity {
 
         if (!InstalledApps.isGooglePlayInstalled(xdrip.getAppContext())) {
             if (JoH.pratelimit("gms-missing-msg", 86400)) {
-                final String msg = "Google Play services - not installed!\nInstall it or disable xDrip+ sync options";
+                final String msg = "Google Play services - not installed!\nInstall it or disable xDrip sync options";
                 JoH.static_toast_long(msg);
                 Home.toaststaticnext(msg);
             }

@@ -8,7 +8,7 @@ import android.content.SharedPreferences;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.text.format.DateFormat;
 import android.view.View;
 import android.widget.Button;
@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import com.eveningoutpost.dexdrip.models.AlertType;
+import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.UserError;
 import com.eveningoutpost.dexdrip.services.MissedReadingService;
 import com.eveningoutpost.dexdrip.utilitymodels.AlertPlayer;
@@ -68,6 +69,7 @@ public class MissedReadingActivity extends ActivityWithMenu {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_missed_readings);
+        JoH.fixActionBar(this);
         mContext = this;
         
         viewTimeStart = (TextView) findViewById(R.id.missed_reading_time_start);
@@ -82,7 +84,7 @@ public class MissedReadingActivity extends ActivityWithMenu {
          * by default uses the same sound file as the other alerts alert.
         **/
         if (Pref.getString("bg_missed_alerts_sound", null) == null) { // If missed reading sound file has never been set
-            Pref.setString("bg_missed_alerts_sound", Pref.getString("other_alerts_sound", "content://settings/system/alarm_alert")); // Set it to the other alerts sound
+            Pref.setString("bg_missed_alerts_sound", Pref.getString("other_alerts_sound", "default")); // Set it to the other alerts sound
         }
         alertMp3File = (EditText) findViewById(R.id.bg_missed_alerts_sound);
         

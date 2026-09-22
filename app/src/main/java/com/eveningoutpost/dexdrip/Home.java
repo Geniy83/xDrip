@@ -4,6 +4,7 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.eveningoutpost.dexdrip.g5model.Ob1G5StateMachine.shortTxId;
 import static com.eveningoutpost.dexdrip.models.JoH.msSince;
 import static com.eveningoutpost.dexdrip.models.JoH.quietratelimit;
+import static com.eveningoutpost.dexdrip.models.JoH.static_toast_long;
 import static com.eveningoutpost.dexdrip.models.JoH.tsl;
 import static com.eveningoutpost.dexdrip.services.Ob1G5CollectionService.getTransmitterID;
 import static com.eveningoutpost.dexdrip.utilitymodels.ColorCache.X;
@@ -218,7 +219,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     public final static int SENSOR_READY_ID = 4912;
     private final UiPing ui = new UiPing();
     public static boolean activityVisible = false;
-    public static boolean invalidateMenu = false;
     public static boolean blockTouches = false;
     private static boolean is_follower = false;
     private static boolean is_follower_set = false;
@@ -282,7 +282,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     private Button stepsButton;
     private Button bpmButton;
     private TextView dexbridgeBattery;
-    private TextView parakeetBattery;
+    private TextView uploaderBattery;
     private TextView sensorAge;
     private TextView currentBgValueText;
     private TextView notificationText;
@@ -417,7 +417,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
         //findViewById(R.id.home_layout_holder).setBackgroundColor(getCol(X.color_home_chart_background));
         this.dexbridgeBattery = (TextView) findViewById(R.id.textBridgeBattery);
-        this.parakeetBattery = (TextView) findViewById(R.id.parakeetbattery);
+        this.uploaderBattery = (TextView) findViewById(R.id.uploaderbattery);
         this.sensorAge = (TextView) findViewById(R.id.libstatus);
         this.extraStatusLineText = (TextView) findViewById(R.id.extraStatusLine);
         this.currentBgValueText = (TextView) findViewById(R.id.currentBgValueRealTime);
@@ -426,7 +426,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
         extraStatusLineText.setText("");
         dexbridgeBattery.setText("");
-        parakeetBattery.setText("");
+        uploaderBattery.setText("");
         sensorAge.setText("");
 
         if (BgGraphBuilder.isXLargeTablet(getApplicationContext())) {
@@ -619,9 +619,8 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         checkBadSettings();
         // lower priority
         PlusSyncService.startSyncService(getApplicationContext(), "HomeOnCreate");
-        ParakeetHelper.notifyOnNextCheckin(false);
 
-        if (checkedeula && (!getString(R.string.app_name).equals("xDrip+"))) {
+        if (checkedeula && (!getString(R.string.app_name).equals("xDrip"))) {
             showcasemenu(SHOWCASE_VARIANT);
         }
 
@@ -1131,7 +1130,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
     private boolean isAutoYPanEnabled() {
         // When true, xDrip auto-pans the Y-axis instead of extending the range for out-of-range readings.
-        return Pref.getBooleanDefaultFalse("auto_y_pan");
+        return Pref.getBoolean("auto_y_pan", true);
     }
 
     public void cloudBackup(MenuItem x) {
@@ -1139,8 +1138,13 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     }
 
     public void crowdTranslate(MenuItem x) {
-        // startActivity(new Intent(this, LanguageEditor.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://crowdin.com/project/xdrip")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        val url = "https://crowdin.com/project/xdrip";
+        try {
+            // startActivity(new Intent(this, LanguageEditor.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Exception e) {
+            static_toast_long("Unable to open web browser for " + url);
+        }
     }
 
     public void testFeature(MenuItem x) {
@@ -1911,10 +1915,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         LocalBroadcastManager.getInstance(this).registerReceiver(statusReceiver,
                 new IntentFilter(Intents.HOME_STATUS_ACTION));
 
-        if (invalidateMenu) {
-            invalidateOptionsMenu();
-            invalidateMenu = false;
-        }
         activityVisible = true;
         updateCurrentBgInfo("generic on resume");
         updateHealthInfo("generic on resume");
@@ -2505,10 +2505,10 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             }
         } else if (collector.equals(DexCollectionType.Mock)) {
             notificationText.append("\n USING FAKE DATA SOURCE !!!");
-            if (MockDataSource.divisor_scale == 1500000) {
+            if (MockDataSource.getDivisorScale() == 1500000) {
                 notificationText.append(" F");
             }
-            if (MockDataSource.amplify_cnst == 330000) {
+            if (MockDataSource.getAmplifyConst() == 330000) {
                 notificationText.append(" Amp");
             }
         }
@@ -2663,6 +2663,8 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             } else { // Only if G6 is not selected or G6 transmitter is synced.
                 notificationText.setText(R.string.now_start_your_sensor);
             }
+
+            displayCurrentInfo(); // update the display even with no sensor to clear old data
 
             if ((dialog == null) || (!dialog.isShowing())) {
                 if (!Experience.gotData() && Experience.backupAvailable() && JoH.ratelimit("restore-backup-prompt", 10)) {
@@ -2948,28 +2950,28 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         }
 
         if (DexCollectionType.hasWifi()) {
-            final int bridgeBattery = Pref.getInt("parakeet_battery", 0);
-            if (bridgeBattery > 0) {
-                if (bridgeBattery < 50) {
-                    parakeetBattery.setText(getString(R.string.parakeet_battery) + ": " + bridgeBattery + "%");
+            final int uploaderBatteryLevel = Pref.getInt("parakeet_battery", 0);
+            if (uploaderBatteryLevel > 0) {
+                if (uploaderBatteryLevel < 50) {
+                    uploaderBattery.setText(getString(R.string.uploader_battery) + ": " + uploaderBatteryLevel + "%");
 
-                    if (bridgeBattery < 40) {
-                        parakeetBattery.setTextColor(Color.RED);
+                    if (uploaderBatteryLevel < 40) {
+                        uploaderBattery.setTextColor(Color.RED);
                     } else {
-                        parakeetBattery.setTextColor(Color.YELLOW);
+                        uploaderBattery.setTextColor(Color.YELLOW);
                     }
-                    parakeetBattery.setVisibility(View.VISIBLE);
+                    uploaderBattery.setVisibility(View.VISIBLE);
                 } else {
-                    parakeetBattery.setVisibility(View.INVISIBLE);
+                    uploaderBattery.setVisibility(View.INVISIBLE);
                 }
             }
         } else {
-            parakeetBattery.setVisibility(View.INVISIBLE);
+            uploaderBattery.setVisibility(View.INVISIBLE);
         }
 
         if (!Pref.getBoolean("display_bridge_battery", true)) {
             dexbridgeBattery.setVisibility(View.INVISIBLE);
-            parakeetBattery.setVisibility(View.INVISIBLE);
+            uploaderBattery.setVisibility(View.INVISIBLE);
         }
 
         final int sensor_age = Pref.getInt("nfc_sensor_age", 0);
@@ -3025,8 +3027,15 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
                 }
             }
 
-            displayCurrentInfoFromReading(lastBgReading, predictive);
+            if (!displayCurrentInfoFromReading(lastBgReading, predictive)) {
+                currentBgValueText.setText("");
+                display_delta = "";
+                if (itr != null) {
+                    itr.update(null); // hide graphical arrow
+                }
+            }
         } else {
+            currentBgValueText.setText(""); // clear value if no reading
             display_delta = "";
         }
 
@@ -3046,18 +3055,18 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         return (60000 * 11);
     }
 
-    private void displayCurrentInfoFromReading(BgReading lastBgReading, boolean predictive) {
+    private boolean displayCurrentInfoFromReading(BgReading lastBgReading, boolean predictive) {
         double estimate = 0;
         double estimated_delta = 0;
-        if (lastBgReading == null) return;
+        if (lastBgReading == null) return false;
         final BestGlucose.DisplayGlucose dg = BestGlucose.getDisplayGlucose();
-        if (dg == null) return;
+        if (dg == null) return false;
         //String slope_arrow = lastBgReading.slopeArrow();
         String slope_arrow = dg.delta_arrow;
         String extrastring = "";
         boolean hide_slope = false;
         // when stale
-        if ((new Date().getTime()) - stale_data_millis() - lastBgReading.timestamp > 0) {
+        if ((new Date().getTime()) - stale_data_millis() - lastBgReading.timestamp > 0) { // TODO fix
             notificationText.setText(R.string.signal_missed);
             if (!predictive) {
                 //  estimate = lastBgReading.calculated_value;
@@ -3170,6 +3179,8 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         if (Pref.getBooleanDefaultFalse("display_glucose_from_plugin") && (PluggableCalibration.getCalibrationPluginFromPreferences() != null)) {
             currentBgValueText.setText(getString(R.string.p_in_circle) + currentBgValueText.getText()); // adds warning P in circle icon
         }
+
+        return true;
     }
 
     // This function is needed in hebrew in order to allow printing the text (for exapmle) -3 mg/dl
@@ -3241,13 +3252,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             menuItem.setVisible(false);
         }
 
-        boolean parakeet_menu_items = false;
-        if (DexCollectionType.hasWifi()) {
-            parakeet_menu_items = Pref.getBoolean("plus_extra_features", false);
-        }
-        menu.findItem(R.id.showmap).setVisible(parakeet_menu_items);
-        menu.findItem(R.id.parakeetsetup).setVisible(parakeet_menu_items);
-
         boolean got_data = Experience.gotData();
         menu.findItem(R.id.crowdtranslate).setVisible(got_data);
 
@@ -3292,7 +3296,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
                         size1=0;
                         size2=0;
                         title="G5 Firmware Warning";
-                        message="Transmitters containing updated firmware which started shipping around 20th Nov 2016 appear to be currently incompatible with xDrip+\n\nWork will continue to try to resolve this issue but at the time of writing there is not yet a solution.  For the latest updates you can select the Alpha or Nightly update channel.";
+                        message="Transmitters containing updated firmware which started shipping around 20th Nov 2016 appear to be currently incompatible with xDrip\n\nWork will continue to try to resolve this issue but at the time of writing there is not yet a solution.  For the latest updates you can select the Alpha or Nightly update channel.";
                         break;*/
 
                 case SHOWCASE_VARIANT:
@@ -3375,11 +3379,10 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... params) {
-                int permissionCheck = ContextCompat.checkSelfPermission(Home.this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE);
-                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(Home.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                        ContextCompat.checkSelfPermission(Home.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(Home.this,
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                             0);
                     return null;
                 } else {
@@ -3464,10 +3467,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         startActivity(new Intent(getApplicationContext(), SdcardImportExport.class));
     }
 
-    public void showMapFromMenu(MenuItem myitem) {
-        startActivity(new Intent(getApplicationContext(), MapsActivity.class));
-    }
-
     public void showHelpFromMenu(MenuItem myitem) {
         startActivity(new Intent(getApplicationContext(), HelpActivity.class));
     }
@@ -3478,22 +3477,6 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
     public void showAssistFromMenu(MenuItem myitem) {
         startActivity(new Intent(getApplicationContext(), EmergencyAssistActivity.class));
-    }
-
-    public void parakeetSetupMode(MenuItem myitem) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage(R.string.are_you_sure_you_want_switch_parakeet_to_setup);
-
-        alertDialogBuilder.setPositiveButton(R.string.yes_enter_setup_mode, (arg0, arg1) -> {
-            // switch parakeet to setup mode
-            ParakeetHelper.parakeetSetupMode(getApplicationContext());
-        });
-
-
-        alertDialogBuilder.setNegativeButton(R.string.nokeep_parakeet_as_it_is, (dialog, which) -> {/* do nothing*/});
-
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
     }
 
     public void resendGlucoseToWatch(MenuItem myitem) {
@@ -3607,7 +3590,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         if (JoH.ratelimit("manual-update-check", 5)) {
             toast(getString(R.string.checking_for_update));
             UpdateActivity.last_check_time = -1;
-            UpdateActivity.checkForAnUpdate(getApplicationContext(), true);
+            UpdateActivity.checkForAnUpdate(this, true);
         }
     }
 

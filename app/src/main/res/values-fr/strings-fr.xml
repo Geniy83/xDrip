@@ -184,6 +184,8 @@
     <string name="share_config_via_qr_code">Partager la config via le code QR</string>
     <string name="check_for_updated_version">Vérifier les mises à jour</string>
     <string name="current_version_is_up_to_date">Pas de mise à jour disponible dans le canal sélectionné</string>
+    <string name="title_dialog_check_for_update">Pas de mise à jour dans le canal %1$s</string>
+    <string name="message_dialog_check_for_update">Une version plus récente peut exister dans d\'autres canaux.</string>
     <string name="send_feedback_to_developer">Envoyer des messages au développeur</string>
     <string name="home_screen">Écran d\'accueil</string>
     <string name="event_logs">Journal des événements</string>
@@ -202,7 +204,7 @@
     <string name="deel_settings_for_algs">Paramètres avancés pour les algorithmes</string>
     <string name="low_level_prediction_values">Valeurs de niveau de prédiction d\'hypoglycémie</string>
     <string name="glucose_drop_for_one_unit">Baisse de la glycémie pour 1 Unité</string>
-    <string name="xdrip_plus_prediction_settings">xDrip+ Simulation prédictive</string>
+    <string name="xdrip_plus_prediction_settings">xDrip+ Simulations prédictives</string>
     <string name="settings_for_syncing">Paramètres pour la sync entre appareils</string>
     <string name="xdrip_plus_sync_settings">xDrip+ Synchronisation</string>
     <string name="xdrip_plus_update_settings">xDrip+ Mises à jour</string>
@@ -286,6 +288,8 @@
     <string name="pref_summary_show_treatments">Afficher les points de Traitements sur le graphique</string>
     <string name="pref_use_wear_health">Utiliser les données de santé Wear</string>
     <string name="pref_summary_use_wear_health">Collecter et afficher le compteur de pas lorsque disponible</string>
+    <string name="summary_enable_wear_auto_update">Quand activé, mettre à jour automatiquement xDrip sur la montre pour correspondre à la version du téléphone.</string>
+    <string name="title_enable_wear_auto_update">Mise à jour automatique de la montre</string>
     <string name="pebble_integration">Intégration Pebble</string>
     <string name="send_data_to_pebble_watchface">Envoyer des données au cadran Pebble.</string>
     <string name="pebble_watch_integration">Intégration de la montre Pebble</string>
@@ -358,6 +362,9 @@
     <string name="all_alerts_disabled_until">"Toutes les alertes désactivées jusqu'à "</string>
     <string name="low_alerts_disabled_until">"Alertes Basses désactivées jusqu'à  "</string>
     <string name="high_alerts_disabled_until">"Alertes Hautes désactivées jusqu'à "</string>
+    <string name="you_reenable">vous réactivez</string>
+    <string name="active_alert_rerise_at">L\'alerte active nommée \"%1$s\" existe. Alerte se reproduira à %2$s (%3$s minutes restantes)</string>
+    <string name="active_alert_snoozed_until">L\'alerte active nommée \"%1$s\" existe. Alerte se reproduira à %2$s (%3$s minutes restantes)</string>
     <string name="default_snooze">Mise en veille par défaut</string>
     <string name="until_you_reenable">Jusqu\'à ce que vous réactivez</string>
     <string name="set">Accepter</string>
@@ -648,6 +655,9 @@
     <string name="libre_use_smoothed_data_summary">Utiliser une moyenne de 5 points pour obtenir des données Libre plus lisses.</string>
     <string name="libre_use_smoothed_data_title">Lissage des données Libre.</string>
     <string name="retrieve_blukon_history_title">Récupérer l\'historique du Freestyle Libre</string>
+    <string name="summary_libre_one_minute_interval">Accepter les données à intervalles d\'une minute de Libre. Redémarrez votre téléphone pour que les modifications prennent effet.</string>
+    <string name="title_libre_one_minute_interval">Libre 1 minute</string>
+    <string name="summary_nsfollow_sample_period">Par défaut : 5 min\nActuel : %s</string>
     <string name="retrieve_blukon_history_summary">Extraire l\'historique manqué du périphérique BluCon lors de la reconnexion au capteur.</string>
     <string name="interpret_share_raw">Si vous utilisez Share, xDrip affichera les valeurs quand elles sont normalement cachées sur le récepteur.</string>
     <string name="interpret_raw">Interpréter les valeurs brutes</string>
@@ -821,6 +831,7 @@
     <string name="use_flair_colors">Barre de Titre/Navigation personnalisée</string>
     <string name="upper_title_bar_flair">Barre de titre supérieure</string>
     <string name="lower_button_bar_falir">Barre de navigation inférieure</string>
+    <string name="title_language">Langue</string>
     <string name="force_english_text">Forcer le texte anglais</string>
     <string name="using_local_language">Utilisation actuelle de la langue locale de votre appareil</string>
     <string name="forcing_alternate_language">Utilisation actuelle forcée de la langue de substitution</string>
@@ -903,6 +914,9 @@
     <string name="only_stop_your_sensor_when_you_actually_plan">N\'arrêtez votre capteur que lorsque vous planifiez de l\'enlever, sinon laissez fonctionner!</string>
     <string name="restart_collector">Redémarrer le collecteur</string>
     <string name="forget_device">Oublier ce périphérique</string>
+    <string name="re_read_transmitter">Relire l\'émetteur</string>
+    <string name="tx_reread_confirmation_title">Actualiser les détails de l\'émetteur</string>
+    <string name="tx_reread_confirmation_message">Force xDrip à relire les caractéristiques de l\'émetteur. Aucun avantage si l\'émetteur n\'a pas changé; des changements de page d\'état temporaire peuvent se produire. Mieux vaut utiliser entre les sessions de capteurs.</string>
     <string name="other_notes">Autres Notes:</string>
     <string name="delete_future_data">Supprimer les données futures</string>
     <string name="show_only_untranslated">Afficher uniquement les non traduites</string>
@@ -944,6 +958,7 @@
     <string name="use_confict_msg_glimp">Vous pouvez ajuster les paramètres de Glimp : options -&gt; périphériques -&gt; désélectionner l\'option Bluetooth</string>
     <string name="eng_mode_is_on">Le mode Ingénierie est activé. Veuillez le désactiver à moins que vous n\'en ayez besoin car il peut causer un comportement inattendu.</string>
     <string name="yes">Oui</string>
+    <string name="enable">Activer</string>
     <string name="xdrip_compatible_features">Fonctionnalités %s xDrip+</string>
     <string name="garmin">Garmin</string>
     <string name="fitbit">Fitbit</string>
@@ -1234,6 +1249,29 @@
     <string name="summary_tidepool_upload_no_treatment">Télécharger uniquement les données MGC pour éviter les doublons avec l\'envoi manuel de la pompe</string>
     <string name="title_tidepool_upload_no_treatment">Ne pas télécharger les traitements</string>
     <string name="title_tidepool">Tidepool</string>
+    <!-- Nocturne connect flow -->
+    <string name="nocturne">Nocturne</string>
+    <string name="nocturne_connect_activity_label">Se connecter à Nocturne</string>
+    <string name="nocturne_settings_summary">Télécharger vers Nocturne API V4</string>
+    <string name="title_nocturne_upload_enable">Activer l\'envoi vers Nocturne</string>
+    <string name="title_nocturne_instance_url">URL de l\'instance Nocturne</string>
+    <string name="nocturne_instance_url_dialog_message">Entrez l\'URL de votre instance Nocturne (par exemple https://mynocturne.example.com)</string>
+    <string name="nocturne_connect_pref_summary">Autorisez xDrip+ avec votre instance Nocturne</string>
+    <string name="title_nocturne_upload_treatments">Charger les traitements</string>
+    <string name="summary_nocturne_upload_treatments">Télécharger des bolus, des glucides, des notes et des événements de l\'appareil</string>
+    <string name="title_nocturne_upload_calibrations">Télécharger les calibrations</string>
+    <string name="summary_nocturne_upload_calibrations">Télécharger les étalonnages du capteur</string>
+    <string name="title_nocturne_upload_bloodtests">Télécharger les tests sanguins</string>
+    <string name="summary_nocturne_upload_bloodtests">Télécharger les résultats du lecteur de glycémie</string>
+    <string name="title_nocturne_upload_heartrate">Télécharger la fréquence cardiaque</string>
+    <string name="summary_nocturne_upload_heartrate">Télécharger les données de fréquence cardiaque</string>
+    <string name="title_nocturne_upload_stepcount">Télécharger le nombre de pas</string>
+    <string name="summary_nocturne_upload_stepcount">Télécharger les données du nombre de pas</string>
+    <string name="title_nocturne_upload_devicestatus">Télécharger le statut de l\'appareil</string>
+    <string name="summary_nocturne_upload_devicestatus">Télécharger le niveau de batterie du téléphone et le statut de charge</string>
+    <string name="title_nocturne_use_mobile">Utiliser les données mobiles</string>
+    <!-- NocturneConnectActivity (deep link receiver) -->
+    <!-- NocturneConnectHelper (device flow UI) -->
     <string name="show_help">Afficher l\'aide</string>
     <string name="load_save_settings_on_sdcard">Charger / Enregistrer les paramètres</string>
     <string name="delete_all_bg_readings">Supprimer toutes les lectures BG</string>
@@ -1483,6 +1521,10 @@
     <string name="title_ongoing_notification_channel">Utiliser le canal de notification en cours</string>
     <string name="summary_notification_channels_grouping">Si les notifications doivent être groupées ensemble. Incompatible avec l\'option \'Numéro élément dans la zone de notification\'</string>
     <string name="title_notification_channels_grouping">Grouper les notifications par fil</string>
+    <string name="glucose_level_notifications">Alertes de niveau de glucose</string>
+    <string name="ongoing_notification">Notification en cours</string>
+    <string name="general_notifications">Général</string>
+    <string name="other_alert_notifications">Autres alertes</string>
     <string name="summary_delay_ascending_3min">Pour le profil de volume ascendant, retarder le démarrage du son d\'alerte de 3 minutes. Le vibreur (si activé) démarre dès que l\'alerte se déclenche, quel que soit ce paramètre.</string>
     <string name="title_ascending_volume">Réglages du volume croissant</string>
     <string name="title_delay_ascending_3min">Délai du volume ascendant</string>
@@ -1959,4 +2001,11 @@
     <string name="error_with_value">Erreur de la valeur</string>
     <string name="glupro_disconnected">Déconnecté</string>
     <string name="glupro_connected">Connecté</string>
+    <string name="glupro_start_time">Mettre en marche</string>
+    <string name="invalid_transmitter_id">ID transmetteur invalide</string>
+    <string name="you_entered">Vous avez entré :</string>
+    <string name="fixed_version">Version fixe:</string>
+    <string name="click">Cliquer</string>
+    <string name="to_use_this_instead">utiliser ceci à la place ?</string>
+    <string name="the_transmitter_id_you_have_entered_is_incorrect">L\'ID du transmetteur ou le code d\'appairage que vous avez entré est incorrect et ne fonctionnerait pas.\n\nVeuillez vérifier les détails et réessayer.</string>
 </resources>

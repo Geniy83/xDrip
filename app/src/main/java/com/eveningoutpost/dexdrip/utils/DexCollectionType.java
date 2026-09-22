@@ -7,6 +7,8 @@ import com.eveningoutpost.dexdrip.services.G5CollectionService;
 import com.eveningoutpost.dexdrip.services.Ob1G5CollectionService;
 import com.eveningoutpost.dexdrip.services.UiBasedCollector;
 import com.eveningoutpost.dexdrip.services.WifiCollectionService;
+import com.eveningoutpost.dexdrip.utilitymodels.Constants;
+import com.eveningoutpost.dexdrip.utilitymodels.MockDataSource;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.cgm.medtrum.MedtrumCollectionService;
 import com.eveningoutpost.dexdrip.cgm.nsfollow.NightscoutFollowService;
@@ -99,7 +101,7 @@ public enum DexCollectionType {
         Collections.addAll(isPassive, NSEmulator, NSFollow, SHFollow, WebFollow, LibreReceiver, UiBased, CLFollow, AidexReceiver, OttaiAppReceiver, SyaiAppReceiver, DashxAppReceiver, AnytimeAppReceiver);
         Collections.addAll(canNotStartStopOrCal, NSFollow, SHFollow, WebFollow, CLFollow, Disabled); // Collectors that cannot start/stop sensor or submit calibration (UiBased removed to allow calibration entry)
         Collections.addAll(alwaysNativeCal, Follower, GluPro); // always allow calibration entry
-        Collections.addAll(usesBattery, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel, Follower, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi); // parakeet separate
+        Collections.addAll(usesBattery, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel, Follower, LimiTTer, LibreAlarm, LimiTTerWifi, LibreWifi); // the wifi uploader battery is separate
         Collections.addAll(usesDexcomRaw, BluetoothWixel, DexbridgeWixel, WifiWixel, WifiBlueToothWixel, DexcomG5, WifiDexBridgeWixel, Mock);
         Collections.addAll(usesTransmitterBattery, WifiWixel, BluetoothWixel, DexbridgeWixel, WifiBlueToothWixel, WifiDexBridgeWixel); // G4 transmitter battery
         Collections.addAll(newerCollector, NSFollow, SHFollow, WebFollow, CLFollow, GluPro);
@@ -343,7 +345,7 @@ public enum DexCollectionType {
                     return Pref.getInt("bridge_battery", -1);
             }
         } else if (DexCollectionType.hasWifi()) {
-            return Pref.getInt("parakeet_battery", -3);
+            return Pref.getInt("parakeet_battery", -3); // wifi uploader battery; legacy preference key
         } else {
             return -2;
         }
@@ -374,21 +376,29 @@ public enum DexCollectionType {
         return getCollectorSamplePeriod(this);
     }
 
-    private static final boolean libreOneMinute = Pref.getBooleanDefaultFalse("libre_one_minute")
+    public double getSamplePeriodScale() {
+        // Only use samplePeriodScale for timings derived from the CGM sensor sample period.
+        // Do NOT use for user-facing time (alerts, snoozes, UI delays).
+        return getSamplePeriod() / (5.0 * Constants.MINUTE_IN_MS);
+    }
+
+    private static final boolean libreOneMinute = Pref.getBooleanDefaultFalse("libre_one_minute");
+
+    private static final boolean EversenseOneMinute = Pref.getBooleanDefaultFalse("Eversense_one_minute")
             && Pref.getBooleanDefaultFalse("engineering_mode");
 
     private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
-            && Pref.getBooleanDefaultFalse("engineering_mode");
-
-    private static final boolean oneMinuteNSFollowers = Pref.getBooleanDefaultFalse("ns_follower_one_minute")
             && Pref.getBooleanDefaultFalse("engineering_mode");
 
     public static long getCollectorSamplePeriod(final DexCollectionType type) {
         switch (type) {
             case LibreReceiver:
                 return libreOneMinute ? 60_000 : 300_000;
+            case NSEmulator:
+                return EversenseOneMinute ? 60_000 : 300_000;
             case NSFollow:
-                return oneMinuteNSFollowers ? 59_000 : 240_000;
+                long samplePeriodInMinutes = Pref.getStringToInt("nsfollow_sample_period_in_minutes", 5);
+                return Constants.MINUTE_IN_MS * Math.max(1, samplePeriodInMinutes);
             case Follower:
                 return libreOneMinuteFollowers ? 59_000 : 240_000;
             case DashxAppReceiver:
@@ -396,6 +406,9 @@ public enum DexCollectionType {
                 return 60_000; // 1 minutes
             case UiBased:
                 return 180_000; // 3 minutes
+            case Mock:
+                int mockInterval = Pref.getInt(MockDataSource.PREF_INTERVAL, 5) ;
+                return mockInterval * Constants.MINUTE_IN_MS;
             default:
                 return 300_000; // 5 minutes
         }
@@ -403,6 +416,12 @@ public enum DexCollectionType {
 
     public static long getCurrentSamplePeriod() {
         return getDexCollectionType().getSamplePeriod();
+    }
+
+    public static double getCurrentSamplePeriodScale() {
+        // Only use CurrentSamplePeriodScale for timings derived from the CGM sensor sample period.
+        // Do NOT use for user-facing time (alerts, snoozes, UI delays).
+        return getDexCollectionType().getSamplePeriodScale();
     }
 
     public static long getCurrentDeduplicationPeriod() {

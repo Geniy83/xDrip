@@ -92,6 +92,16 @@
                     android:key="rest_api_extra_options"
                     android:summary=""
                     android:title="@string/title_rest_api_extra_options">
+
+                    <Preference
+                        android:key="send_nightscout_show_qr"
+                        android:summary="@string/summary_send_sync_show_qr"
+                        android:title="@string/title_send_sync_show_qr">
+                        <intent
+                            android:action="xdrip_nightscout_qr"
+                            android:targetClass="com.eveningoutpost.dexdrip.utils.DisplayQRCode"
+                            android:targetPackage="@string/local_target_package" />
+                    </Preference>
                     <CheckBoxPreference
                         android:defaultValue="true"
                         android:key="skip_lan_uploads_when_no_lan"
@@ -453,6 +463,134 @@
                 </Preference>
 
             </PreferenceScreen>
+
+
+            <PreferenceScreen
+                android:key="cloud_storage_nightlite"
+                android:summary="Lightweight Nightscout compatible service intended for followers"
+                android:title="NightLite">
+
+                <SwitchPreference
+                    android:defaultValue="false"
+                    android:key="nightlite-enabled"
+                    android:summary="Whether to upload to the remote service"
+                    android:switchTextOff="@string/short_off_text_for_switches"
+                    android:switchTextOn="@string/short_on_text_for_switches"
+                    android:title="Upload to NightLite" />
+
+                <EditTextPreference
+                    android:defaultValue=""
+                    android:dialogMessage="This contains your security key - do not disclose it"
+                    android:dialogTitle="Typically entered by scanning QR code from dashboard"
+                    android:inputType="textUri"
+                    android:key="nightlite-api-url"
+                    android:title="NightLite URL" />
+
+                <Preference
+                    android:dependency="nightlite-enabled"
+                    android:key="send_nightlite_show_qr"
+                    android:summary="@string/summary_send_sync_show_qr"
+                    android:title="@string/title_send_sync_show_qr">
+                <intent
+                    android:action="xdrip_nightlite_qr"
+                    android:targetClass="com.eveningoutpost.dexdrip.utils.DisplayQRCode"
+                    android:targetPackage="@string/local_target_package" />
+                </Preference>
+
+            </PreferenceScreen>
+
+            <PreferenceScreen
+                android:key="nocturne_settings"
+                android:summary="@string/nocturne_settings_summary"
+                android:title="@string/nocturne">
+
+                <SwitchPreference
+                    android:defaultValue="false"
+                    android:key="nocturne_upload_enable"
+                    android:switchTextOff="@string/short_off_text_for_switches"
+                    android:switchTextOn="@string/short_on_text_for_switches"
+                    android:title="@string/title_nocturne_upload_enable" />
+
+                <EditTextPreference
+                    android:defaultValue=""
+                    android:dependency="nocturne_upload_enable"
+                    android:dialogMessage="@string/nocturne_instance_url_dialog_message"
+                    android:dialogTitle="@string/title_nocturne_instance_url"
+                    android:inputType="textUri"
+                    android:key="nocturne_instance_url"
+                    android:title="@string/title_nocturne_instance_url" />
+
+                <Preference
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_connect"
+                    android:title="@string/nocturne_connect_activity_label"
+                    android:summary="@string/nocturne_connect_pref_summary" />
+
+                <CheckBoxPreference
+                    android:defaultValue="true"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_sgv"
+                    android:summary="@string/summary_nocturne_upload_sgv"
+                    android:title="@string/title_nocturne_upload_sgv" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_treatments"
+                    android:summary="@string/summary_nocturne_upload_treatments"
+                    android:title="@string/title_nocturne_upload_treatments" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_calibrations"
+                    android:summary="@string/summary_nocturne_upload_calibrations"
+                    android:title="@string/title_nocturne_upload_calibrations" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_bloodtests"
+                    android:summary="@string/summary_nocturne_upload_bloodtests"
+                    android:title="@string/title_nocturne_upload_bloodtests" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_heartrate"
+                    android:summary="@string/summary_nocturne_upload_heartrate"
+                    android:title="@string/title_nocturne_upload_heartrate" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_stepcount"
+                    android:summary="@string/summary_nocturne_upload_stepcount"
+                    android:title="@string/title_nocturne_upload_stepcount" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_devicestatus"
+                    android:summary="@string/summary_nocturne_upload_devicestatus"
+                    android:title="@string/title_nocturne_upload_devicestatus" />
+
+                <CheckBoxPreference
+                    android:defaultValue="false"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_upload_motion"
+                    android:summary="@string/summary_nocturne_upload_motion"
+                    android:title="@string/title_nocturne_upload_motion" />
+
+                <CheckBoxPreference
+                    android:defaultValue="true"
+                    android:dependency="nocturne_upload_enable"
+                    android:key="nocturne_use_mobile"
+                    android:summary="@string/summary_nocturne_use_mobile"
+                    android:title="@string/title_nocturne_use_mobile" />
+
+            </PreferenceScreen>
+
 
         </PreferenceScreen>
         <PreferenceScreen
