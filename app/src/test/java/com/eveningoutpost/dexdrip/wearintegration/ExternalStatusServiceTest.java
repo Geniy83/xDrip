@@ -27,6 +27,7 @@ public class ExternalStatusServiceTest extends RobolectricTestWithConfig {
     final String tbr4 =  "0.00U/h 1.44U(3.12|-1.69)"; // typical
     final String tbr5 =  "Loop Disabled 1.234U/h 1.44U(3.12|-1.69)"; // typical 2
     final String tbr6 =  "Bonjour 2,345U/h 1,04U(1,11|-0,07) -0,35 4(20)g"; // typical 3 french locale
+    final String tbr7 =  "0.00 U/h 1.52U(2.34|-0.82) -0.68 0g"; // AAPS pump_base_basal_rate format "%1$.2f U/h" has a space before the unit
 
     @Test
     public void getTBRTest() {
@@ -66,6 +67,7 @@ public class ExternalStatusServiceTest extends RobolectricTestWithConfig {
         assertWithMessage("TBR 3 non").that(getAbsoluteBR(tbr3)).isNull();
         assertWithMessage("AB 4 match").that(getAbsoluteBR(tbr4)).isEqualTo("0.00U/h");
         assertWithMessage("AB 5 match").that(getAbsoluteBR(tbr5)).isEqualTo("1.234U/h");
+        assertWithMessage("AB 7 match").that(getAbsoluteBR(tbr7)).isEqualTo("0.00 U/h");
         PersistentStore.setLong(EXTERNAL_STATUS_STORE_TIME, JoH.tsl());
         PersistentStore.setString(EXTERNAL_STATUS_STORE, tbr4);
         assertWithMessage("AB 4 match double").that(getAbsoluteBRDouble()).isEqualTo(0.00d);
@@ -73,6 +75,8 @@ public class ExternalStatusServiceTest extends RobolectricTestWithConfig {
         assertWithMessage("AB 5 match double").that(getAbsoluteBRDouble()).isEqualTo(1.234d);
         PersistentStore.setString(EXTERNAL_STATUS_STORE, tbr6);
         assertWithMessage("AB 6 match double").that(getAbsoluteBRDouble()).isEqualTo(2.345d);
+        PersistentStore.setString(EXTERNAL_STATUS_STORE, tbr7);
+        assertWithMessage("AB 7 match double").that(getAbsoluteBRDouble()).isEqualTo(0.00d);
         PersistentStore.setString(EXTERNAL_STATUS_STORE, tbr1);
         assertWithMessage("TBR 1 pass thru").that(getAbsoluteBRDouble()).isNull();
         PersistentStore.setString(EXTERNAL_STATUS_STORE, tbr2);
