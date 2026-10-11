@@ -52,7 +52,8 @@ public class EntryProcessor {
                             bg.sensor_uuid = sensor.uuid;
                             bg.source_info = "Nightscout Follow";
                             bg.save();
-                            Inevitable.task("entry-proc-post-pr",500, () -> bg.postProcess(false));
+                            // Unique id per reading: a shared id debounces to only the last entry's postProcess.
+                            Inevitable.task("entry-proc-post-pr-" + recordTimestamp, 500, () -> bg.postProcess(false));
                         }
                     } else {
                        // break; // stop if we have this reading TODO are entries always in order?

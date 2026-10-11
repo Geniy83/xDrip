@@ -7,6 +7,7 @@ import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.UserError;
 import com.eveningoutpost.dexdrip.utilitymodels.CollectionServiceStarter;
 import com.eveningoutpost.dexdrip.utilitymodels.Constants;
+import com.eveningoutpost.dexdrip.utilitymodels.Inevitable;
 import com.eveningoutpost.dexdrip.utilitymodels.NightscoutTreatments;
 import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.utilitymodels.PumpStatus;
@@ -14,6 +15,7 @@ import com.eveningoutpost.dexdrip.cgm.nsfollow.messages.DeviceStatus;
 import com.eveningoutpost.dexdrip.cgm.nsfollow.messages.Entry;
 import com.eveningoutpost.dexdrip.cgm.nsfollow.utils.NightscoutUrl;
 import com.eveningoutpost.dexdrip.models.BgReading;
+import com.eveningoutpost.dexdrip.utils.DexCollectionType;
 import com.eveningoutpost.dexdrip.utils.framework.RetrofitService;
 
 import java.util.List;
@@ -82,13 +84,16 @@ public class NightscoutFollow {
         session.url = new NightscoutUrl(urlString);
 
         // set up processing callback for entries
-        session.entriesCallback = new NightscoutCallback<List<Entry>>("NS entries download", session, () -> {
-            // process data
-            EntryProcessor.processEntries(session.entries, live);
-            NightscoutFollowService.updateBgReceiveDelay();
-            NightscoutFollowService.scheduleWakeUp();
-            msg("");
-        })
+        session.entriesCallback = new NightscoutCallback<List<Entry>>("NS entries download", session, () ->
+                // Retrofit delivers this callback on the main thread; processing a large batch of
+                // entries (a DB lookup + save per entry) there blocks the UI and causes an ANR.
+                // Offload to a background thread.
+                Inevitable.task("nsfollow-process-entries", 10, () -> {
+                    EntryProcessor.processEntries(session.entries, live);
+                    NightscoutFollowService.updateBgReceiveDelay();
+                    NightscoutFollowService.scheduleWakeUp();
+                    msg("");
+                }))
                 .setOnFailure(() -> msg(session.entriesCallback.getStatus()));
 
         // set up processing callback for treatments
@@ -109,7 +114,9 @@ public class NightscoutFollow {
                 final long lastTs = (last != null) ? last.timestamp : 0;
                 if (lastTs > 0) {
                     final long cutoff = Math.max(lastTs, JoH.tsl() - Constants.DAY_IN_MS);
-                    final int safetyLimit = 2 * 24 * 60; // 2× headroom: fits 24h at any upload rate
+                    // Cap to ~24h at the current sample period (plus headroom). Prevents re-pulling and
+                    // re-processing thousands of entries every poll when a server ignores find[date][$gt].
+                    final int safetyLimit = (int) (Constants.DAY_IN_MS / DexCollectionType.getCurrentSamplePeriod()) + 20;
                     UserError.Log.d(TAG, "Fetching entries since: " + cutoff + " (limit " + safetyLimit + ")");
                     getService().getEntriesSince(session.url.getHashedSecret(), safetyLimit, cutoff, JoH.tsl() + "").enqueue(session.entriesCallback);
                 } else {

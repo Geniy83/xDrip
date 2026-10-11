@@ -13,9 +13,10 @@ public class OkHttpWrapper {
             synchronized (OkHttpWrapper.class) {
                 if (instance == null) {
                     instance = new OkHttpClient.Builder()
-                            .connectTimeout(30, TimeUnit.SECONDS)
-                            .readTimeout(60, TimeUnit.SECONDS)
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(20, TimeUnit.SECONDS)
                             .writeTimeout(20, TimeUnit.SECONDS)
+                            .callTimeout(30, TimeUnit.SECONDS) // hard cap so a single request can't hang the client
                             .build();
                 }
             }
