@@ -334,6 +334,12 @@ public class BluetoothGlucoseMeter extends Service {
                                 GLUCOSE_SERVICE, DATE_TIME_CHARACTERISTIC);
                     }
 
+                    // Ascensia/Contour meters - use incremental pull instead of all records
+                    if (mLastManufacturer.startsWith("Ascensia") || mLastManufacturer.startsWith("Contour")) {
+                        Bluetooth_CMD.replace_command(GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, "W",
+                                new Bluetooth_CMD("W", GLUCOSE_SERVICE, RECORDS_CHARACTERISTIC, RecordsCmdTx.getNewerThanSequenceExclusive(getHighestSequence() & 0xFFFF), "request reading newer than " + (getHighestSequence() & 0xFFFF)));
+                    }
+
                     // Diamond Mobile Mini DM30b firmware v1.2.4
                     // v1.2.4 has reversed sequence numbers and first item is last item and no clock access
                     if (mLastManufacturer.startsWith("TaiDoc")) {
@@ -1265,7 +1271,14 @@ public class BluetoothGlucoseMeter extends Service {
         } else {
             start_intent.putExtra("service_action", "scan");
         }
-        xdrip.getAppContext().startService(start_intent);
+        try {
+            xdrip.getAppContext().startService(start_intent);
+        } catch (Exception e) {
+            // from target sdk 26 this throws if we are in the background, eg started only for a broadcast
+            if (JoH.ratelimit("service-start-refused", 3600)) {
+                UserError.Log.e(TAG, "Could not start meter service: " + e);
+            }
+        }
     }
 
     // remote api for forgetting

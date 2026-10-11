@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
 
 import com.eveningoutpost.dexdrip.R;
 import com.eveningoutpost.dexdrip.models.UserError;
+import com.eveningoutpost.dexdrip.utilitymodels.OkHttpWrapper;
 import com.eveningoutpost.dexdrip.xdrip;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -64,6 +65,7 @@ import okhttp3.ConnectionPool;
 import okhttp3.Cookie;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -73,7 +75,7 @@ public class CareLinkAuthenticator {
 
     private static final String TAG = "CareLinkAuthenticator";
 
-    protected static final String CAREPARTNER_APP_DISCO_URL = "https://clcloud.minimed.eu/connect/carepartner/v13/discover/android/3.6";
+    protected static final String CAREPARTNER_APP_DISCO_URL = "https://clcloud.minimed.eu/connect/carepartner/v13/discover/android/3.8";
     protected static final String CARELINK_CONNECT_SERVER_EU = "carelink.minimed.eu";
     protected static final String CARELINK_CONNECT_SERVER_US = "carelink.minimed.com";
     protected static final String CARELINK_LANGUAGE_EN = "en";
@@ -284,7 +286,7 @@ public class CareLinkAuthenticator {
 
     private OkHttpClient getHttpClient() {
         if (this.httpClient == null)
-            this.httpClient = new OkHttpClient();
+            this.httpClient = OkHttpWrapper.getClient();
         return this.httpClient;
     }
 
@@ -426,7 +428,7 @@ public class CareLinkAuthenticator {
 
         //Build client with cookies from CredentialStore
         cookieJar = new EditableCookieJar();
-        httpClient = new OkHttpClient.Builder()
+        httpClient = OkHttpWrapper.getClient().newBuilder()
                 .cookieJar(cookieJar)
                 .build();
         cookieJar.AddCookies(credentialStore.getCredential().cookies);
@@ -439,7 +441,7 @@ public class CareLinkAuthenticator {
                 .build();
         requestBuilder = new Request.Builder()
                 .url(url)
-                .post(RequestBody.create(null, new byte[0]))
+                .post(RequestBody.create(new byte[0], (MediaType) null))
                 .addHeader("Accept", "application/json, text/plain, */*")
                 .addHeader("Accept-Language", "en;q=0.9, *;q=0.8")
                 .addHeader("Connection", "keep-alive")

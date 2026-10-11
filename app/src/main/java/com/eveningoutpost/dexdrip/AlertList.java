@@ -10,7 +10,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.view.View;
@@ -140,6 +140,7 @@ public class AlertList extends ActivityWithMenu {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alert_list);
+        JoH.fixActionBar(this);
         mContext = getApplicationContext();
         listViewLow = (ListView) findViewById(R.id.listView_low);
         listViewHigh = (ListView) findViewById(R.id.listView_high);

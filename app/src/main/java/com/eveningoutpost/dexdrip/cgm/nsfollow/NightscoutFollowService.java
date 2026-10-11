@@ -1,9 +1,12 @@
 package com.eveningoutpost.dexdrip.cgm.nsfollow;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import android.text.SpannableString;
 
 import com.eveningoutpost.dexdrip.models.BgReading;
@@ -25,6 +28,7 @@ import com.eveningoutpost.dexdrip.xdrip;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,10 +47,6 @@ import static com.eveningoutpost.dexdrip.xdrip.gs;
 public class NightscoutFollowService extends ForegroundService {
 
     private static final String TAG = "NightscoutFollow";
-    /** Poll interval: from DexCollectionType (e.g. 1 min if ns_follower_one_minute + engineering_mode, else 4 min). */
-    private static long getSamplePeriodMs() {
-        return DexCollectionType.getCollectorSamplePeriod(NSFollow);
-    }
 
     protected static volatile String lastState = "";
 
@@ -61,6 +61,43 @@ public class NightscoutFollowService extends ForegroundService {
     private static volatile long lastTreatmentTime = 0;
     private static volatile long treatmentReceivedDelay = 0;
 
+    @VisibleForTesting
+    static volatile Integer uploaderBattery = null;
+    @VisibleForTesting
+    static volatile Boolean uploaderCharging = null;
+
+    @VisibleForTesting
+    static boolean isNetworkAvailable(final ConnectivityManager cm) {
+        return cm != null && cm.getActiveNetwork() != null;
+    }
+
+    @VisibleForTesting
+    static boolean isLoopbackUrl(final String url) {
+        if (url == null || url.isEmpty()) return false;
+        try {
+            String host = URI.create(url).getHost();
+            if (host == null) return false;
+            host = host.toLowerCase();
+            if (host.startsWith("[")) host = host.substring(1, host.length() - 1); // strip IPv6 brackets
+            return host.equals("localhost")
+                    || host.equals("::1")
+                    || host.startsWith("127.");
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    @VisibleForTesting
+    static boolean shouldPoll(final ConnectivityManager cm, final String url) {
+        return isNetworkAvailable(cm) || isLoopbackUrl(url);
+    }
+
+    private static long getLag() {
+        // Wake delay derived from the nsfollow_lag setting.
+        // Values represent seconds of a 5-minute sample period and are scaled
+        // to maintain the same percentage delay for other sample periods.
+        return  Math.round(Constants.SECOND_IN_MS * Pref.getStringToInt("nsfollow_lag", 0) * DexCollectionType.getCurrentSamplePeriodScale());
+    }
     private void buggySamsungCheck() {
         if (buggySamsung == null) {
             buggySamsung = new BuggySamsung(TAG);
@@ -79,7 +116,6 @@ public class NightscoutFollowService extends ForegroundService {
             // Check service should be running
             if (!shouldServiceRun()) {
                 UserError.Log.d(TAG, "Stopping service due to shouldServiceRun() result");
-                //       msg("Stopping");
                 stopSelf();
                 return START_NOT_STICKY;
             }
@@ -90,7 +126,22 @@ public class NightscoutFollowService extends ForegroundService {
             if (lastBg != null) {
                 lastBgTime = lastBg.timestamp;
             }
-            if (lastBg == null || JoH.msSince(lastBg.timestamp) > getSamplePeriodMs()) {
+
+            // Always re-arm next wakeup, even if we skip the poll below
+            scheduleWakeUp();
+
+            // Skip network I/O when there is no data connection — saves wake lock extension,
+            // DNS resolution, and TCP handshake cost. The alarm above ensures we retry.
+            // Loopback targets (e.g. Juggluco on 127.0.0.1) are always reachable, even in
+            // airplane mode, so never skip them.
+            final ConnectivityManager cm =
+                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (!shouldPoll(cm, Pref.getString("nsfollow_url", ""))) {
+                UserError.Log.d(TAG, "No network and non-loopback target — skipping poll");
+                return START_STICKY;
+            }
+
+            if (lastBg == null || JoH.msSince(lastBg.timestamp) > DexCollectionType.getCurrentSamplePeriod()) {
                 if (JoH.ratelimit("last-ns-follow-poll", 5)) {
                     Inevitable.task("NS-Follow-Work", 200, () -> {
                         NightscoutFollow.work(true);
@@ -101,7 +152,6 @@ public class NightscoutFollowService extends ForegroundService {
                 UserError.Log.d(TAG, "Already have recent reading: " + JoH.msSince(lastBg.timestamp));
             }
 
-            scheduleWakeUp();
         } finally {
             JoH.releaseWakeLock(wl);
         }
@@ -127,12 +177,23 @@ public class NightscoutFollowService extends ForegroundService {
         }
     }
 
+    static void updateUploaderStatus(final Integer battery, final Boolean charging) {
+        uploaderBattery = battery;
+        uploaderCharging = charging;
+    }
+
+    static void clearUploaderStatus() {
+        uploaderBattery = null;
+        uploaderCharging = null;
+    }
+
     static void scheduleWakeUp() {
         final BgReading lastBg = BgReading.lastNoSenssor();
         final long last = lastBg != null ? lastBg.timestamp : 0;
 
-        final long grace = Constants.SECOND_IN_MS * 10;
-        final long next = Anticipate.next(JoH.tsl(), last, getSamplePeriodMs(), grace) + grace;
+        final long grace = Math.round(Constants.SECOND_IN_MS * 10 * DexCollectionType.getCurrentSamplePeriodScale()); // 10 seconds for a 5-minute sample rate
+        final long lag = getLag(); // User can choose a wake delay with a 0 default.  We use it to delay the time stamp of the last reading to account for any source delay.
+        final long next = Anticipate.next(JoH.tsl(), last + lag, DexCollectionType.getCurrentSamplePeriod(), grace) + grace;
         wakeup_time = next;
         UserError.Log.d(TAG, "Anticipate next: " + JoH.dateTimeText(next) + "  last: " + JoH.dateTimeText(last));
 
@@ -149,24 +210,24 @@ public class NightscoutFollowService extends ForegroundService {
      */
     public static List<StatusItem> megaStatus() {
         final BgReading lastBg = BgReading.lastNoSenssor();
-        final long lag = Constants.SECOND_IN_MS * Pref.getStringToInt("nsfollow_lag", 0); // Wake delay selected by user
 
         String lastPollText = "n/a";
         if (lastPoll > 0) {
             lastPollText = JoH.niceTimeScalar(JoH.msSince(lastPoll));
         }
 
-        long hightlightGrace = Constants.SECOND_IN_MS * 30; // 30 seconds
+        long hightlightGrace = Math.round(Constants.SECOND_IN_MS * 30 * DexCollectionType.getCurrentSamplePeriodScale()); // 30 seconds for a 5-minute sample rate
 
         // Status for BG receive delay (time from bg was recorded till received in xdrip)
         String ageOfBgLastPoll = "n/a";
         Highlight ageOfLastBgPollHighlight = Highlight.NORMAL;
+        final long lag = getLag();
         if (bgReceiveDelay > 0) {
             ageOfBgLastPoll = JoH.niceTimeScalar(bgReceiveDelay);
-            if (bgReceiveDelay - lag > getSamplePeriodMs() / 2) {
+            if (bgReceiveDelay - lag > DexCollectionType.getCurrentSamplePeriod() / 2) {
                 ageOfLastBgPollHighlight = Highlight.BAD;
             }
-            if (bgReceiveDelay - lag > getSamplePeriodMs() * 2) {
+            if (bgReceiveDelay - lag > DexCollectionType.getCurrentSamplePeriod() * 2) {
                 ageOfLastBgPollHighlight = Highlight.CRITICAL;
             }
         }
@@ -177,7 +238,7 @@ public class NightscoutFollowService extends ForegroundService {
         if (lastBg != null) {
             long age = JoH.msSince(lastBg.timestamp);
             ageLastBg = JoH.niceTimeScalar(age);
-            if (age > getSamplePeriodMs() + hightlightGrace + lag) {
+            if (age > DexCollectionType.getCurrentSamplePeriod() + hightlightGrace + lag) {
                 bgAgeHighlight = Highlight.BAD;
             }
         }
@@ -198,24 +259,23 @@ public class NightscoutFollowService extends ForegroundService {
         statuses.add(new StatusItem("BG receive delay", ageOfBgLastPoll, ageOfLastBgPollHighlight));
 
         if(NightscoutFollow.treatmentDownloadEnabled()) {
-            statuses.add(new StatusItem());
             statuses.add(new StatusItem("Latest Treatment", ageLastTreatment + (lastTreatment != null ? " ago" : "")));
             statuses.add(new StatusItem("Treatment receive delay", ageOfTreatmentWhenReceived));
         }
 
-        statuses.add(new StatusItem());
+        if (uploaderBattery != null) {
+            final String charging = Boolean.TRUE.equals(uploaderCharging) ? " (charging)" : "";
+            statuses.add(new StatusItem("Uploader battery", uploaderBattery + "%" + charging));
+        }
+
         statuses.add(new StatusItem("Last poll", lastPollText + (lastPoll > 0 ? " ago" : "")));
         statuses.add(new StatusItem("Next poll in", JoH.niceTimeScalar(wakeup_time - JoH.tsl())));
-        if (lastBg != null) {
-            statuses.add(new StatusItem("Last BG time", JoH.dateTimeText(lastBg.timestamp)));
+        if (JoH.buggy_samsung) {
+            statuses.add(new StatusItem("Buggy handset", gs(R.string.yes)));
         }
-        statuses.add(new StatusItem("Next poll time", JoH.dateTimeText(wakeup_time)));
-        statuses.add(new StatusItem());
-        statuses.add(new StatusItem("Buggy handset", JoH.buggy_samsung ? gs(R.string.yes) : gs(R.string.no)));
         statuses.add(new StatusItem("Download treatments", NightscoutFollow.treatmentDownloadEnabled() ? gs(R.string.yes) : gs(R.string.no)));
 
         if (StringUtils.isNotBlank(lastState)) {
-            statuses.add(new StatusItem());
             statuses.add(new StatusItem("Last state", lastState));
         }
 

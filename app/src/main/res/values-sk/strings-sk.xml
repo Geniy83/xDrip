@@ -872,6 +872,7 @@
     <string name="bluereaderuglystate">blueReader nefunguje správne! Bude vypnutý a vy ho zapnite (krátkym stlačením tlačítka). Potom by blueReader mal pracovať správne!</string>
     <string name="offical_msg">Oficiálna aplikácia</string>
     <string name="yes">Áno</string>
+    <string name="enable">Povoliť</string>
     <string name="xdrip_compatible_features">Vlastnosti xDrip+ %s</string>
     <string name="garmin">Garmin</string>
     <string name="fitbit">Fitbit</string>
@@ -1048,6 +1049,11 @@
     <string name="summary_tidepool_upload_no_treatment">Nahrať iba dáta z CGM, aby sa zabránilo duplicitám s manuálnym nahrávaním z pumpy</string>
     <string name="title_tidepool_upload_no_treatment">Nenahrávať ošetrenia</string>
     <string name="title_tidepool">Tidepool</string>
+    <!-- Nocturne connect flow -->
+    <string name="title_nocturne_upload_treatments">Odosielať ošetrenia</string>
+    <string name="title_nocturne_use_mobile">Používať mobilné dáta</string>
+    <!-- NocturneConnectActivity (deep link receiver) -->
+    <!-- NocturneConnectHelper (device flow UI) -->
     <string name="show_help">Zobraziť nápovedu</string>
     <string name="load_save_settings_on_sdcard">Načítať / uložiť nastavenia na SD kartu</string>
     <string name="delete_all_bg_readings">Zmazať všetky načítané hodnoty glykémií</string>
@@ -1310,4 +1316,5 @@ Je nutné zakázať v prípade, že chcete používať xdrip cifreník. (Požado
     <string name="volume_profile_high">Vysoká glykémia</string>
     <string name="glupro_disconnected">Odpojené</string>
     <string name="glupro_connected">Pripojené</string>
+    <string name="glupro_start_time">Čas, kedy sa má hodnota zobraziť</string>
 </resources>

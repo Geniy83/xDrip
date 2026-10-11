@@ -1,7 +1,7 @@
 package com.eveningoutpost.dexdrip;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StrikethroughSpan;
@@ -302,7 +302,7 @@ public class BestGlucose {
         return dg;
     }
 
-    protected static boolean compensateNoise() {
+    public static boolean compensateNoise() {
         return (BgGraphBuilder.last_noise > BgGraphBuilder.NOISE_TRIGGER
                 || (BgGraphBuilder.last_noise > BgGraphBuilder.NOISE_TRIGGER_ULTRASENSITIVE
                         && Pref.getBooleanDefaultFalse("engineering_mode")

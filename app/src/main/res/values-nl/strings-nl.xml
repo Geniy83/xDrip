@@ -918,6 +918,7 @@
     <string name="use_confict_msg_glimp">U kunt Glimp instellingen aanpassen: opties -&gt; apparaten -&gt; deselecteer Bluetooth optie</string>
     <string name="eng_mode_is_on">Engineering mode is ingeschakeld. Schakel het uit, tenzij je zeker weet dat je het nodig hebt, omdat het onverwacht gedrag kan veroorzaken.</string>
     <string name="yes">Ja</string>
+    <string name="enable">Inschakelen</string>
     <string name="xdrip_compatible_features">xDrip+ %s functies</string>
     <string name="garmin">Garmin</string>
     <string name="fitbit">Fitbit</string>
@@ -1195,6 +1196,11 @@
     <string name="summary_tidepool_dev_servers">Indien ingeschakeld, gaan uploads naar https://int-app.tidepool.org in plaats van de reguliere https://app.tidepool.org/</string>
     <string name="title_tidepool_dev_servers">Gebruik integratie (test) servers</string>
     <string name="title_tidepool">Tidepool</string>
+    <!-- Nocturne connect flow -->
+    <string name="title_nocturne_upload_treatments">Upload behandelingen</string>
+    <string name="title_nocturne_use_mobile">Gebruik mobiele data</string>
+    <!-- NocturneConnectActivity (deep link receiver) -->
+    <!-- NocturneConnectHelper (device flow UI) -->
     <string name="show_help">Hulp laten zien</string>
     <string name="load_save_settings_on_sdcard">Instellingen laden/opslaan</string>
     <string name="delete_all_bg_readings">Wis alle BG-metingen</string>
@@ -1683,4 +1689,5 @@
     <string name="volume_profile_high">Hoge glucosewaarden</string>
     <string name="glupro_disconnected">Verbinding verbroken</string>
     <string name="glupro_connected">Verbonden</string>
+    <string name="glupro_start_time">Aanzetten</string>
 </resources>

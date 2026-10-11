@@ -3,6 +3,7 @@ package com.eveningoutpost.dexdrip.utilitymodels;
 // jamorham
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -57,7 +59,6 @@ import okhttp3.Response;
 
 import static com.eveningoutpost.dexdrip.alert.UpdateAvailable.XDRIP_UPDATE_NOTIFICATION_PENDING;
 import static com.eveningoutpost.dexdrip.utilitymodels.Constants.XDRIP_UPDATE_NOTIFICATION_ID;
-import static com.eveningoutpost.dexdrip.utilitymodels.OkHttpWrapper.enableTls12OnPreLollipop;
 import static com.eveningoutpost.dexdrip.utilitymodels.PersistentStore.incrementLong;
 
 public class UpdateActivity extends BaseAppCompatActivity {
@@ -123,7 +124,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
             final String channel = "beta";
             Log.i(TAG, "Checking for a software update, channel: " + channel);
             String subversion = "";
-            if (!context.getString(R.string.app_name).equals("xDrip+")) {
+            if (!context.getString(R.string.app_name).equals("xDrip")) {
                 subversion = context.getString(R.string.app_name).replaceAll("[^a-zA-Z0-9]", "");
                 Log.d(TAG, "Using subversion: " + subversion);
             }
@@ -133,10 +134,10 @@ public class UpdateActivity extends BaseAppCompatActivity {
             new Thread(() -> {
                 try {
                     if (httpClient == null) {
-                        httpClient = enableTls12OnPreLollipop(new OkHttpClient.Builder()
+                        httpClient = OkHttpWrapper.getClient().newBuilder()
                                 .connectTimeout(30, TimeUnit.SECONDS)
                                 .readTimeout(60, TimeUnit.SECONDS)
-                                .writeTimeout(20, TimeUnit.SECONDS))
+                                .writeTimeout(20, TimeUnit.SECONDS)
                                 .build();
                     }
 
@@ -199,8 +200,18 @@ public class UpdateActivity extends BaseAppCompatActivity {
                                     }
                                 } else {
                                     Log.i(TAG, "Our current version is the most recent: " + versionnumber + " vs " + newversion);
-                                    if (fromUi) {
-                                        JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                                    if (fromUi) { // Only for manual update check
+                                        if (channel.equals("nightly")) {
+                                            JoH.static_toast_long(xdrip.gs(R.string.current_version_is_up_to_date));
+                                        } else {
+                                            ((Activity) context).runOnUiThread(() -> {
+                                                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                                                builder.setTitle(context.getString(R.string.title_dialog_check_for_update, channel));
+                                                builder.setMessage(context.getString(R.string.message_dialog_check_for_update));
+                                                builder.setPositiveButton(R.string.close, null);
+                                                builder.show();
+                                            });
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
@@ -229,11 +240,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
     private static void checkForUpdateFromGitHub(final Context context, final boolean fromUi) {
         try {
             if (httpClient == null) {
-                httpClient = enableTls12OnPreLollipop(new OkHttpClient.Builder()
-                        .connectTimeout(30, TimeUnit.SECONDS)
-                        .readTimeout(60, TimeUnit.SECONDS)
-                        .writeTimeout(20, TimeUnit.SECONDS))
-                        .build();
+                httpClient = OkHttpWrapper.getClient();
             }
             String repo = DEFAULT_GITHUB_REPO;
             if (repo.isEmpty()) repo = DEFAULT_GITHUB_REPO;
@@ -408,16 +415,14 @@ public class UpdateActivity extends BaseAppCompatActivity {
     }
 
     private boolean checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_STORAGE_DOWNLOAD);
-                return false;
-            }
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_STORAGE_DOWNLOAD);
+            return false;
         }
         return true;
     }
@@ -477,14 +482,13 @@ public class UpdateActivity extends BaseAppCompatActivity {
     private class AsyncDownloader extends AsyncTask<Void, Long, Boolean> {
         private final String URL = DOWNLOAD_URL + (DOWNLOAD_URL.contains("?") ? "&" : "?") + "rr=" + JoH.tsl();
 
-        private final OkHttpClient.Builder okbuilder = new OkHttpClient.Builder()
+        private final OkHttpClient client = OkHttpWrapper.getClient().newBuilder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(120, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .followRedirects(true)
-                .followSslRedirects(true);
-
-        private final OkHttpClient client = enableTls12OnPreLollipop(okbuilder).build();
+                .followSslRedirects(true)
+                .build();
         private String filename;
 
         @Override
@@ -620,7 +624,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
                         try {
                             try {
                                 DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                                dm.addCompletedDownload(filename, "xDrip+ update version " + newversion, false, "application/vnd.android.package-archive", getDownloadFolder() + "/" + filename, FILE_SIZE, true);
+                                dm.addCompletedDownload(filename, "xDrip update version " + newversion, false, "application/vnd.android.package-archive", getDownloadFolder() + "/" + filename, FILE_SIZE, true);
                             } catch (Exception e) {
                                 Log.e(TAG, "Download manager error: " + e);
                             }
