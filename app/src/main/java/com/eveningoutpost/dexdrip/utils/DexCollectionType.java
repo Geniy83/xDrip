@@ -374,23 +374,24 @@ public enum DexCollectionType {
         return getCollectorSamplePeriod(this);
     }
 
-    private static final boolean libreOneMinute = Pref.getBooleanDefaultFalse("libre_one_minute")
-            && Pref.getBooleanDefaultFalse("engineering_mode");
-
-    private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
-            && Pref.getBooleanDefaultFalse("engineering_mode");
-
-    private static final boolean oneMinuteNSFollowers = Pref.getBooleanDefaultFalse("ns_follower_one_minute")
-            && Pref.getBooleanDefaultFalse("engineering_mode");
+    // "Update period" user setting (minutes) for one-minute-capable sources
+    // (Libre patched app, xDrip+ Sync Follower, Nightscout Follower). Replaces the old
+    // engineering-mode libre_one_minute / follower_one_minute / ns_follower_one_minute toggles.
+    // Default "1" so installs and upgrades poll every minute. Read live so a change applies
+    // without a reboot.
+    private static boolean isOneMinuteUpdatePeriod() {
+        return "1".equals(Pref.getString("update_period", "1"));
+    }
 
     public static long getCollectorSamplePeriod(final DexCollectionType type) {
+        final boolean oneMinute = isOneMinuteUpdatePeriod();
         switch (type) {
             case LibreReceiver:
-                return libreOneMinute ? 60_000 : 300_000;
+                return oneMinute ? 60_000 : 300_000;
             case NSFollow:
-                return oneMinuteNSFollowers ? 59_000 : 240_000;
+                return oneMinute ? 59_000 : 240_000;
             case Follower:
-                return libreOneMinuteFollowers ? 59_000 : 240_000;
+                return oneMinute ? 59_000 : 240_000;
             case DashxAppReceiver:
             case AnytimeAppReceiver:
                 return 60_000; // 1 minutes

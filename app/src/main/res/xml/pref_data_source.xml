@@ -13,6 +13,13 @@
             android:summary="@string/how_receive_data"
             android:title="@string/hardware_data_source" />
 
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/update_period_entries"
+            android:entryValues="@array/update_period_values"
+            android:key="update_period"
+            android:title="@string/update_period_title" />
+
         <PreferenceScreen
             android:key="xdrip_plus_web_follow_settings"
             android:summary="Configuration options for web follower data source"

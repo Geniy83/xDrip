@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="update_period_entries">
+        <item>@string/update_period_1min</item>
+        <item>@string/update_period_5min</item>
+    </string-array>
+    <string-array name="update_period_values">
+        <item>1</item>
+        <item>5</item>
+    </string-array>
+
     <string-array name="DexCollectionMethods">
         <item>Bluetooth Wixel</item>
         <item>xBridge Wixel</item>

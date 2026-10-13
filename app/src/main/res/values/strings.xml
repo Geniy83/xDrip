@@ -1965,6 +1965,9 @@
     <string name="summary_naughty_child_mode">Disables the ability to snooze alarms for more than 2 hours (engineering mode only)</string>
     <string name="title_never_cleanup_dbs">Never cleanup databases daily</string>
     <string name="summary_never_cleanup_dbs">Disables databases (BGs, treatments, logs etc.) cleanup on Daily Intent Service and prevents daily database backup. Enable only if xDrip+ drops all your database periodically</string>
+    <string name="update_period_title">Update period</string>
+    <string name="update_period_1min">1 minute</string>
+    <string name="update_period_5min">5 minutes</string>
     <string name="libre_one_minute_title">Libre one minute</string>
     <string name="libre_one_minute_summary">Accept data at one minute intervals from Libre source. WARNING: This feature is still under development and may break different things. Currently only for patched app data source. Please report anything you notice not working and to activate changes to this setting you need to reboot your phone. Requires engineering mode to be enabled to change setting.</string>
     <string name="follower_one_minute_title">Follower one minute</string>

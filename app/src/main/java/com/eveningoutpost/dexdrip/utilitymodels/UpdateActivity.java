@@ -103,7 +103,7 @@ public class UpdateActivity extends BaseAppCompatActivity {
             last_check_time = prefs.getLong(last_update_check_time, 0);
 
         final boolean fromGitHub = prefs.getBoolean(PREF_UPDATE_FROM_GITHUB, false);
-        long checkFrequency = 86300_000 * 3; // 3 days
+        long checkFrequency = 43200_000; // 12 hours (twice a day)
         if (((JoH.tsl() - last_check_time) > checkFrequency) || (debug)) {
             last_check_time = JoH.tsl();
             prefs.edit().putLong(last_update_check_time, last_check_time).apply();

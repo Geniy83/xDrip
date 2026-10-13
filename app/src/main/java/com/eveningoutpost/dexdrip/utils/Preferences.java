@@ -1447,6 +1447,30 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                 //
             }
 
+            // "Update period" (1 min / 5 min) for Libre patched app / xDrip+ Sync Follower / Nightscout Follower.
+            final Preference updatePeriod = findPreference("update_period");
+            try {
+                if (updatePeriod instanceof ListPreference) {
+                    final ListPreference lp = (ListPreference) updatePeriod;
+                    final int idx = lp.findIndexOfValue(lp.getValue());
+                    updatePeriod.setSummary(idx >= 0 ? lp.getEntries()[idx] : null);
+                }
+                updatePeriod.setOnPreferenceChangeListener((preference, newValue) -> {
+                    if (preference instanceof ListPreference) {
+                        final ListPreference lp = (ListPreference) preference;
+                        final int idx = lp.findIndexOfValue(String.valueOf(newValue));
+                        preference.setSummary(idx >= 0 ? lp.getEntries()[idx] : null);
+                    }
+                    // Apply the new period immediately rather than waiting for a reboot.
+                    Pref.setString("update_period", String.valueOf(newValue));
+                    NightscoutFollow.resetInstance();
+                    CollectionServiceStarter.restartCollectionServiceBackground();
+                    return true;
+                });
+            } catch (Exception e) {
+                //
+            }
+
 
             final Preference shFollowUser = findPreference("shfollow_user");
             final Preference shFollowPass = findPreference("shfollow_pass");
@@ -1908,6 +1932,17 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
                     collectionCategory.removePreference(nsFollowUrl);
                     collectionCategory.removePreference(nsFollowDownload);
                     collectionCategory.removePreference(nsFollowLag);
+                } catch (Exception e) {
+                    //
+                }
+            }
+
+            // Update period dropdown only applies to one-minute-capable sources.
+            if (collectionType != DexCollectionType.LibreReceiver
+                    && collectionType != DexCollectionType.Follower
+                    && collectionType != DexCollectionType.NSFollow) {
+                try {
+                    collectionCategory.removePreference(updatePeriod);
                 } catch (Exception e) {
                     //
                 }
@@ -2639,6 +2674,14 @@ public class Preferences extends BasePreferenceActivity implements SearchPrefere
 
                     if (collectionType == DexCollectionType.Follower) {
                         collectionCategory.addPreference(xSyncFollowChime);
+                    }
+
+                    if (collectionType == DexCollectionType.LibreReceiver
+                            || collectionType == DexCollectionType.Follower
+                            || collectionType == DexCollectionType.NSFollow) {
+                        collectionCategory.addPreference(updatePeriod);
+                    } else {
+                        collectionCategory.removePreference(updatePeriod);
                     }
 
 

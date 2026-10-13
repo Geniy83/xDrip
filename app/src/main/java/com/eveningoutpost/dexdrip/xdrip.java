@@ -28,6 +28,7 @@ import com.eveningoutpost.dexdrip.utilitymodels.VersionTracker;
 import com.eveningoutpost.dexdrip.calibrations.PluggableCalibration;
 import com.eveningoutpost.dexdrip.utils.SentryCrashReporting;
 import com.eveningoutpost.dexdrip.utils.jobs.DailyJob;
+import com.eveningoutpost.dexdrip.utils.jobs.UpdateCheckJob;
 import com.eveningoutpost.dexdrip.utils.jobs.XDripJobCreator;
 import com.eveningoutpost.dexdrip.watch.lefun.LeFunEntry;
 import com.eveningoutpost.dexdrip.watch.miband.MiBandEntry;
@@ -106,6 +107,7 @@ public class xdrip extends Application {
 
         JobManager.create(this).addJobCreator(new XDripJobCreator());
         DailyJob.schedule();
+        UpdateCheckJob.schedule();
         //SyncService.startSyncServiceSoon();
 
         if (!isRunningTest()) {

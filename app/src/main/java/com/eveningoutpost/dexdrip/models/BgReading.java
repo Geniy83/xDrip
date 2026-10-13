@@ -1397,9 +1397,6 @@ public class BgReading extends Model implements ShareUploadableBg {
         return bgReadingInsertFromJson(json, do_notification, WholeHouse.isEnabled());
     }
 
-    private static final boolean libreOneMinuteFollowers = Pref.getBooleanDefaultFalse("follower_one_minute")
-            && Pref.getBooleanDefaultFalse("engineering_mode");
-
     public static BgReading bgReadingInsertFromJson(String json, boolean do_notification, boolean force_sensor) {
         if ((json == null) || (json.length() == 0)) {
             Log.e(TAG, "bgreadinginsertfromjson passed a null or zero length json");

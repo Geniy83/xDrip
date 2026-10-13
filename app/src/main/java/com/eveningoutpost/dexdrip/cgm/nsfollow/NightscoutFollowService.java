@@ -43,7 +43,7 @@ import static com.eveningoutpost.dexdrip.xdrip.gs;
 public class NightscoutFollowService extends ForegroundService {
 
     private static final String TAG = "NightscoutFollow";
-    /** Poll interval: from DexCollectionType (e.g. 1 min if ns_follower_one_minute + engineering_mode, else 4 min). */
+    /** Poll interval: from DexCollectionType (1 min or 5 min per the "update_period" setting; defaults to 1 min). */
     private static long getSamplePeriodMs() {
         return DexCollectionType.getCollectorSamplePeriod(NSFollow);
     }

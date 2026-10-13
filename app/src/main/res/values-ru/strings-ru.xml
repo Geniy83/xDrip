@@ -1927,6 +1927,9 @@
     <string name="summary_naughty_child_mode">Отключает возможность откладывать тревоги более чем на 2 часа (только инженерный режим)</string>
     <string name="title_never_cleanup_dbs">Никогда не очищать базы данных ежедневно</string>
     <string name="summary_never_cleanup_dbs">Отключает очистку баз данных (ГК, терапия, журналы и т.д.) при выполнении Daily Intent Service и отключает Ежедневное сохранение базы данных. Включайте, только если xDrip+ периодически удаляет всю вашу базу данных</string>
+    <string name="update_period_title">Период обновления</string>
+    <string name="update_period_1min">1 минута</string>
+    <string name="update_period_5min">5 минут</string>
     <string name="libre_one_minute_title">Libre 1 мин.</string>
     <string name="libre_one_minute_summary">Принимает данные с интервалами в одну минуту из источника Libre (pathced app). ВНИМАНИЕ: Эта функция еще в разработке и может ломать разные вещи. Пожалуйста, сообщайте о любых неисправностях. Чтобы изменение этой настройки вступило в силу, необходимо перезагрузить телефон. Для изменения этой настройки нужно включить инженерный режим.</string>
     <string name="follower_one_minute_title">Фолловер 1 мин.</string>
