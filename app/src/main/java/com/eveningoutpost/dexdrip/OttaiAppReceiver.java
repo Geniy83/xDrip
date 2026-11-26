@@ -69,6 +69,7 @@ public class OttaiAppReceiver extends BroadcastReceiver {
                         switch (action) {
                             case Intents.OTTAI_APP:
                             case Intents.OTTAI_CN_APP:
+                            case Intents.XDRIP_PLUS_NS_EMULATOR: // Inter-app broadcast action: Ottai app now sends data here
 
                                 // in future this could have its own data source perhaps instead of follower
                                 if (!Home.get_follower() && DexCollectionType.getDexCollectionType() != DexCollectionType.OttaiAppReceiver &&

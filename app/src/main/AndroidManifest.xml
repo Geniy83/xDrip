@@ -634,6 +634,7 @@
             <intent-filter>
                 <action android:name="com.eveningoutpost.dexdrip.action.OTTAI_APP" />
                 <action android:name="com.eveningoutpost.dexdrip.OT_APP" />
+                <action android:name="com.eveningoutpost.dexdrip.NS_EMULATOR" />
             </intent-filter>
         </receiver>
         <receiver android:name=".DashxAppReceiver">
